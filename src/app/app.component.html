@@ -1,0 +1,17 @@
+<div class="app-container">
+  <header class="main-header">
+    <h1>Gestão de Contratos</h1>
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Novo Contrato</a>
+      <a routerLink="/contratos" routerLinkActive="active">Lista de Contratos</a>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="bottom-bar">
+    Sistema de Gestão de Contratos &copy; {{ currentYear }}
+  </footer>
+</div>

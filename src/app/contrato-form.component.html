@@ -1,0 +1,264 @@
+<div class="contrato-form-card">
+  <div class="card-header">
+    <h2>{{ isEditMode ? 'Editar' : 'Novo' }} Contrato</h2>
+    <button type="button" class="btn btn-outline-light" (click)="onCancel()">
+      <i class="fas fa-times me-1"></i> Cancelar
+    </button>
+  </div>
+  <div class="card-body">
+    <form [formGroup]="contratoForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+            <div class="row">
+              <!-- Número do Contrato -->
+              <div class="col-md-6 mb-3">
+                <label for="numeroContrato" class="form-label">Número do Contrato</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="numeroContrato"
+                  formControlName="numeroContrato"
+                  [ngClass]="{'is-invalid': submitted && f['numeroContrato'].errors}"
+                  placeholder="Ex: CTR-2023-001"
+                >
+                <div *ngIf="submitted && f['numeroContrato'].errors" class="invalid-feedback">
+                  <div *ngIf="f['numeroContrato'].errors?.['required']">Número do contrato é obrigatório</div>
+                  <div *ngIf="f['numeroContrato'].errors?.['pattern']">Formato inválido. Use CTR-AAAA-NNN</div>
+                </div>
+              </div>
+
+              <!-- Nome da Empresa -->
+              <div class="col-md-6 mb-3">
+                <label for="nomeEmpresa" class="form-label">Nome da Empresa</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nomeEmpresa"
+                  formControlName="nomeEmpresa"
+                  [ngClass]="{'is-invalid': submitted && f['nomeEmpresa'].errors}"
+                >
+                <div *ngIf="submitted && f['nomeEmpresa'].errors" class="invalid-feedback">
+                  <div *ngIf="f['nomeEmpresa'].errors?.['required']">Nome da empresa é obrigatório</div>
+                  <div *ngIf="f['nomeEmpresa'].errors?.['minlength']">Mínimo de 3 caracteres</div>
+                </div>
+              </div>
+
+              <!-- CNPJ -->
+              <div class="col-md-6 mb-3">
+                <label for="cnpj" class="form-label">CNPJ</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cnpj"
+                  formControlName="cnpj"
+                  [ngClass]="{'is-invalid': submitted && f['cnpj'].errors}"
+                  placeholder="Ex: 12.345.678/0001-90"
+                >
+                <div *ngIf="submitted && f['cnpj'].errors" class="invalid-feedback">
+                  <div *ngIf="f['cnpj'].errors?.['required']">CNPJ é obrigatório</div>
+                  <div *ngIf="f['cnpj'].errors?.['pattern']">Formato inválido. Use XX.XXX.XXX/XXXX-XX</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Nome do Fiscal -->
+              <div class="col-md-6 mb-3">
+                <label for="nomeFiscal" class="form-label">Nome do Fiscal</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nomeFiscal"
+                  formControlName="nomeFiscal"
+                  [ngClass]="{'is-invalid': submitted && f['nomeFiscal'].errors}"
+                >
+                <div *ngIf="submitted && f['nomeFiscal'].errors" class="invalid-feedback">
+                  <div *ngIf="f['nomeFiscal'].errors?.['required']">Nome do fiscal é obrigatório</div>
+                  <div *ngIf="f['nomeFiscal'].errors?.['minlength']">Mínimo de 3 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Nome do Gestor -->
+              <div class="col-md-6 mb-3">
+                <label for="nomeGestor" class="form-label">Nome do Gestor (Opcional)</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nomeGestor"
+                  formControlName="nomeGestor"
+                  [ngClass]="{'is-invalid': submitted && f['nomeGestor'].errors}"
+                >
+                <div *ngIf="submitted && f['nomeGestor'].errors" class="invalid-feedback">
+                  <div *ngIf="f['nomeGestor'].errors?.['minlength']">Mínimo de 3 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Matrícula do Fiscal -->
+              <div class="col-md-6 mb-3">
+                <label for="matriculaFiscal" class="form-label">Matrícula do Fiscal</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="matriculaFiscal"
+                  formControlName="matriculaFiscal"
+                  [ngClass]="{'is-invalid': submitted && f['matriculaFiscal'].errors}"
+                  placeholder="5 dígitos"
+                >
+                <div *ngIf="submitted && f['matriculaFiscal'].errors" class="invalid-feedback">
+                  <div *ngIf="f['matriculaFiscal'].errors?.['required']">Matrícula é obrigatória</div>
+                  <div *ngIf="f['matriculaFiscal'].errors?.['pattern']">Apenas 5 dígitos numéricos</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Data de Início -->
+              <div class="col-md-4 mb-3">
+                <label for="dataInicio" class="form-label">Data de Início</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="dataInicio"
+                  formControlName="dataInicio"
+                  [ngClass]="{'is-invalid': submitted && f['dataInicio'].errors}"
+                >
+                <div *ngIf="submitted && f['dataInicio'].errors" class="invalid-feedback">
+                  <div *ngIf="f['dataInicio'].errors?.['required']">Data de início é obrigatória</div>
+                  <div *ngIf="f['dataInicio'].errors?.['invalidDate']">Data inválida</div>
+                </div>
+              </div>
+
+              <!-- Data de Término -->
+              <div class="col-md-4 mb-3">
+                <label for="dataFim" class="form-label">Data de Término</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="dataFim"
+                  formControlName="dataFim"
+                  [ngClass]="{'is-invalid': submitted && f['dataFim'].errors}"
+                >
+                <div *ngIf="submitted && f['dataFim'].errors" class="invalid-feedback">
+                  <div *ngIf="f['dataFim'].errors?.['required']">Data de término é obrigatória</div>
+                  <div *ngIf="f['dataFim'].errors?.['invalidDate']">Data inválida</div>
+                  <div *ngIf="f['dataFim'].errors?.['endBeforeStart']">Deve ser posterior à data de início</div>
+                </div>
+              </div>
+
+              <!-- Valor do Contrato -->
+              <div class="col-md-4 mb-3">
+                <label for="valorContrato" class="form-label">Valor do Contrato (R$)</label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="valorContrato"
+                    formControlName="valorContrato"
+                    [ngClass]="{'is-invalid': submitted && f['valorContrato'].errors}"
+                    step="0.01"
+                    min="0"
+                  >
+                </div>
+                <div *ngIf="submitted && f['valorContrato'].errors" class="invalid-feedback">
+                  <div *ngIf="f['valorContrato'].errors?.['required']">Valor é obrigatório</div>
+                  <div *ngIf="f['valorContrato'].errors?.['min']">O valor deve ser positivo</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Termo Aditivo -->
+              <div class="col-md-4 mb-3">
+                <label for="termoAditivo" class="form-label">Termo Aditivo</label>
+                <select
+                  class="form-select"
+                  id="termoAditivo"
+                  formControlName="termoAditivo"
+                  [ngClass]="{'is-invalid': submitted && f['termoAditivo'].errors}"
+                >
+                  <option value="nao">Não</option>
+                  <option value="sim">Sim</option>
+                </select>
+                <div *ngIf="submitted && f['termoAditivo'].errors" class="invalid-feedback">
+                  <div *ngIf="f['termoAditivo'].errors?.['required']">Selecione uma opção</div>
+                </div>
+              </div>
+
+              <!-- Situação -->
+              <div class="col-md-4 mb-3">
+                <label for="situacao" class="form-label">Situação</label>
+                <select
+                  class="form-select"
+                  id="situacao"
+                  formControlName="situacao"
+                  [ngClass]="{'is-invalid': submitted && f['situacao'].errors}"
+                >
+                  <option value="ativo">Ativo</option>
+                  <option value="encerrado">Encerrado</option>
+                  <option value="suspenso">Suspenso</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Anexos -->
+      <div class="row">
+        <div class="col-md-6">
+          <label for="anexoContrato" class="form-label">Anexar Contrato (PDF, até 5MB)</label>
+          <label class="custom-file-upload">
+            <input
+              type="file"
+              id="anexoContrato"
+              class="file-input"
+              (change)="onFileChange($event, 'contrato')"
+              accept=".pdf"
+            >
+            <span class="file-label">
+              <i class="fas fa-file-pdf"></i>
+              Selecionar arquivo
+              <span class="file-name" *ngIf="f['anexoContrato'].value">{{ f['anexoContrato'].value.name }}</span>
+            </span>
+          </label>
+        </div>
+        <div class="col-md-6">
+          <label for="anexoPortaria" class="form-label">Anexar Portaria de Fiscal (PDF, até 5MB)</label>
+          <label class="custom-file-upload">
+            <input
+              type="file"
+              id="anexoPortaria"
+              class="file-input"
+              (change)="onFileChange($event, 'portaria')"
+              accept=".pdf"
+            >
+            <span class="file-label">
+              <i class="fas fa-file-pdf"></i>
+              Selecionar arquivo
+              <span class="file-name" *ngIf="f['anexoPortaria'].value">{{ f['anexoPortaria'].value.name }}</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+            <!-- Observações -->
+            <div class="mb-3">
+              <label for="observacoes" class="form-label">Observações</label>
+              <textarea
+                class="form-control"
+                id="observacoes"
+                formControlName="observacoes"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- Botões -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary" (click)="onCancel()" [disabled]="loading">
+          <i class="fas fa-times me-1"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i class="fas fa-save me-1"></i>
+          {{ loading ? 'Salvando...' : (isEditMode ? 'Atualizar' : 'Salvar') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
