@@ -5,6 +5,103 @@
 @use '@fortawesome/fontawesome-free/scss/regular';
 @use '@fortawesome/fontawesome-free/scss/brands';
 
+/* ===========================================
+   ESTILOS TEMPORÁRIOS PARA DEPURAÇÃO
+   =========================================== */
+/* Garante que os botões de ação sejam visíveis */
+.btn-sm {
+  /* Força visibilidade */
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
+  
+  /* Tamanho consistente */
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  margin: 2px !important;
+  
+  /* Borda destacada para depuração */
+  border: 2px solid rgba(255, 0, 0, 0.5) !important;
+  
+  /* Posicionamento */
+  position: relative;
+  z-index: 1000;
+  
+  /* Ícones */
+  i {
+    font-size: 14px !important;
+    display: inline-block !important;
+    color: inherit !important;
+  }
+  
+  /* Estilo específico para o botão de excluir */
+  &.btn-outline-danger {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    
+    &:hover, &:focus {
+      background-color: #dc3545 !important;
+      color: white !important;
+      
+      i {
+        color: white !important;
+      }
+    }
+  }
+  
+  /* Estilo específico para o botão de editar */
+  &.btn-outline-warning {
+    color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    
+    &:hover, &:focus {
+      background-color: #ffc107 !important;
+      color: #000 !important;
+      
+      i {
+        color: #000 !important;
+      }
+    }
+  }
+  
+  /* Estado desabilitado */
+  &[disabled] {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+  }
+}
+
+/* Garante que os botões na tabela tenham prioridade */
+table td .btn-sm {
+  position: relative;
+  z-index: 1000;
+  transform: scale(1); /* Força renderização */
+}
+
+/* Debug container */
+.debug-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 9999;
+  font-family: monospace;
+  font-size: 12px;
+  max-width: 300px;
+  max-height: 200px;
+  overflow: auto;
+}
+/* ===========================================
+   FIM DOS ESTILOS TEMPORÁRIOS
+   =========================================== */
+
 /* Estilos globais */
 body {
   margin: 0;

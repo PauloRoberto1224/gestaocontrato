@@ -49,25 +49,138 @@
   border-bottom: 2px solid #333;
 }
 
-/* Estilo para o botão de edição */
-.btn-outline-warning {
-  color: #ffc107;
-  border-color: #ffc107;
-  padding: 0.15rem 0.4rem;
-  line-height: 1;
-  border-radius: 0.25rem;
-  transition: all 0.2s ease-in-out;
+/* Estilos para os botões de ação na tabela */
+table {
+  th, td {
+    vertical-align: middle;
+    white-space: nowrap;
+  }
   
-  &:hover, &:focus {
-    color: #000;
-    background-color: #ffc107;
+  .btn-action {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    margin: 0 2px;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+  
+  .btn-outline-warning {
+    color: #ffc107;
     border-color: #ffc107;
-    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+    
+    &:hover {
+      color: #000;
+      background-color: #ffc107;
+    }
   }
   
-  .fa-edit {
-    font-size: 0.875rem;
+  .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+    
+    &:hover {
+      color: #fff;
+      background-color: #dc3545;
+    }
   }
+  
+  /* Garante que os botões fiquem alinhados corretamente */
+  .d-flex {
+    gap: 5px;
+  }
+}
+
+/* Estilos para os botões de ação na tabela */
+.btn-sm {
+  // Garante que o botão seja visível e tenha um tamanho mínimo
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex !important; // Força a exibição
+  align-items: center;
+  justify-content: center;
+  opacity: 1 !important; // Garante que não está transparente
+  visibility: visible !important; // Garante que está visível
+  position: relative;
+  z-index: 1;
+  border-width: 1px !important;
+  border-style: solid !important;
+  transition: all 0.15s ease-in-out;
+  
+  i {
+    font-size: 14px;
+    display: inline-block !important;
+  }
+  
+  &:hover:not(:disabled) {
+    transform: scale(1.1);
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  
+  &[disabled] {
+    opacity: 0.6 !important;
+    cursor: not-allowed;
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    color: #adb5bd !important;
+  }
+  
+  // Estilo específico para o botão de excluir
+  &.btn-outline-danger {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    
+    &:hover:not(:disabled), &:focus:not(:disabled) {
+      background-color: #dc3545 !important;
+      color: white !important;
+      border-color: #dc3545 !important;
+    }
+    
+    &:active:not(:disabled) {
+      background-color: #c82333 !important;
+      border-color: #bd2130 !important;
+    }
+  }
+  
+  // Estilo específico para o botão de editar
+  &.btn-outline-warning {
+    color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    
+    &:hover:not(:disabled), &:focus:not(:disabled) {
+      background-color: #ffc107 !important;
+      color: #000 !important;
+      border-color: #ffc107 !important;
+    }
+    
+    &:active:not(:disabled) {
+      background-color: #e0a800 !important;
+      border-color: #d39e00 !important;
+    }
+    
+/* Estilos para o badge de ID inválido */
+.badge-invalid-id {
+  font-size: 8px;
+  padding: 2px 4px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 3px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
 }
 
 /* Ajuste para linhas da tabela */

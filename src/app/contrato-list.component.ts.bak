@@ -1,14 +1,14 @@
-import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Contrato } from './contrato.model';
-import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 import { ContratoService } from './contrato.service';
 import { AlertaService } from './services/alerta.service';
-import { Subject, of } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { NgbModal, NgbModalRef, NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { takeUntil, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
+import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
+import { tap, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-contrato-list',
@@ -17,6 +17,7 @@ import { takeUntil, tap, catchError, distinctUntilChanged } from 'rxjs/operators
     CommonModule,
     RouterModule,
     FormsModule,
+    ConfirmModalComponent,
     NgbModule
   ],
   providers: [DatePipe],
@@ -61,7 +62,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
   carregarContratos(): void {
     console.log('Iniciando carregamento de contratos...');
     this.carregando = true;
-
+    
     // Limpa a lista atual
     this.contratos = [];
     this.cdRef.detectChanges();
@@ -74,7 +75,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
           console.log('Dados brutos recebidos do serviço (inicial):', contratos);
           console.log('Tipo dos dados recebidos:', typeof contratos);
           console.log('É array?', Array.isArray(contratos));
-
+          
           if (contratos && Array.isArray(contratos)) {
             console.log(`Recebidos ${contratos.length} contratos do serviço.`);
 
@@ -106,7 +107,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
         catchError(error => {
           console.error('Erro ao processar os contratos:', error);
           this.alertaService.adicionarMensagem(
-            'Erro ao processar os dados dos contratos. Por favor, recarregue a página.',
+            'Erro ao processar os dados dos contratos. Por favor, recarregue a página.', 
             'erro'
           );
           return of([]);
@@ -119,9 +120,9 @@ export class ContratoListComponent implements OnInit, OnDestroy {
               console.error('Dados inválidos recebidos do serviço:', contratos);
               throw new Error('Formato de dados inválido');
             }
-
+            
             console.log(`Processando ${contratos.length} contratos...`);
-
+            
             // Processa os contratos, garantindo que os IDs sejam números válidos
             this.contratos = contratos
               .filter(contrato => {
@@ -135,17 +136,17 @@ export class ContratoListComponent implements OnInit, OnDestroy {
                 ...contrato,
                 id: Number(contrato.id) // Garante que o ID seja um número
               }));
-
+              
             console.log(`${this.contratos.length} contratos processados com sucesso.`);
-
+            
             // Aplica filtros, ordenação e atualiza a UI
             this.aplicarFiltrosEOrdenacao();
             this.calcularTotais();
             this.verificarAlertas();
-
+            
             // Força a detecção de mudanças
             this.cdRef.detectChanges();
-
+            
             // Notifica o usuário se não houver contratos
             if (this.contratos.length === 0) {
               this.alertaService.adicionarMensagem('Nenhum contrato encontrado.', 'info');
@@ -153,7 +154,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
           } catch (error) {
             console.error('Erro ao processar contratos:', error);
             this.alertaService.adicionarMensagem(
-              'Erro ao processar os contratos. Tente novamente.',
+              'Erro ao processar os contratos. Tente novamente.', 
               'erro'
             );
           } finally {
@@ -165,7 +166,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
           console.error('Erro ao carregar contratos:', error);
           this.carregando = false;
           this.alertaService.adicionarMensagem(
-            'Erro ao carregar os contratos. Tente novamente mais tarde.',
+            'Erro ao carregar os contratos. Tente novamente mais tarde.', 
             'erro'
           );
         },
@@ -176,14 +177,14 @@ export class ContratoListComponent implements OnInit, OnDestroy {
     const updateSubscription = this.contratoService.getContratos()
       .pipe(
         takeUntil(this.destroy$),
-        distinctUntilChanged((prev, curr) =>
+        distinctUntilChanged((prev, curr) => 
           JSON.stringify(prev) === JSON.stringify(curr)
         )
       )
       .subscribe({
         next: (contratos: Contrato[]) => {
           console.log('Atualização recebida. Total de contratos:', contratos?.length || 0);
-
+          
           if (contratos && Array.isArray(contratos)) {
             try {
               // Atualiza apenas se houver diferenças
@@ -192,7 +193,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
                 this.contratos = contratos
                   .filter(c => c.id != null && !isNaN(Number(c.id)))
                   .map(c => ({ ...c, id: Number(c.id) }));
-
+                
                 this.aplicarFiltrosEOrdenacao();
                 this.cdRef.detectChanges();
               }
@@ -205,7 +206,7 @@ export class ContratoListComponent implements OnInit, OnDestroy {
           console.error('Erro na assinatura de atualização de contratos:', error);
         }
       });
-
+      
     // Adiciona a assinatura ao gerenciador de assinaturas
     this.destroy$.subscribe(() => {
       if (updateSubscription) {
@@ -215,55 +216,76 @@ export class ContratoListComponent implements OnInit, OnDestroy {
   }
 
   get contratosFiltrados(): Contrato[] {
-    let contratos = [...this.contratos];
+    console.log('Aplicando filtros e ordenação...');
+    console.log(`Filtro: status=${this.filtroStatus}, busca="${this.termoBusca}"`);
+    console.log(`Ordenação: campo=${this.ordenacao.campo}, direção=${this.ordenacao.direcao}`);
 
-    // Aplicar filtro de status
-    if (this.filtroStatus === 'ativos') {
-      contratos = contratos.filter(contrato => this.estaAtivo(contrato));
-    } else if (this.filtroStatus === 'expirados') {
-      contratos = contratos.filter(contrato => !this.estaAtivo(contrato));
-    }
+    // Filtra os contratos
+    const contratosFiltrados = this.contratos.filter(contrato => {
+      // Filtro por status
+      if (this.filtroStatus === 'ativos' && !this.estaAtivo(contrato)) {
+        return false;
+      }
+      if (this.filtroStatus === 'expirados' && this.estaAtivo(contrato)) {
+        return false;
+      }
 
-    // Aplicar busca
-    if (this.termoBusca.trim()) {
-      const termo = this.termoBusca.toLowerCase().trim();
-      contratos = contratos.filter(contrato =>
-        (contrato.numeroContrato && contrato.numeroContrato.toLowerCase().includes(termo)) ||
-        (contrato.objetoContrato && contrato.objetoContrato.toLowerCase().includes(termo)) ||
-        (contrato.contratada && contrato.contratada.nome.toLowerCase().includes(termo)) ||
-        (contrato.situacao && contrato.situacao.toLowerCase().includes(termo))
-      );
-    }
+      // Filtro por termo de busca
+      if (this.termoBusca) {
+        const termo = this.termoBusca.toLowerCase();
+        return (
+          (contrato.numeroContrato?.toLowerCase().includes(termo) || false) ||
+          (contrato.nomeEmpresa?.toLowerCase().includes(termo) || false) ||
+          (contrato.nomeFiscal?.toLowerCase().includes(termo) || false) ||
+          (contrato.termoAditivo?.toLowerCase().includes(termo) || false) ||
+          (contrato.cnpj?.toLowerCase().includes(termo) || false) ||
+          (contrato.matriculaFiscal?.toLowerCase().includes(termo) || false)
+        );
+      }
 
-    // Aplicar ordenação
-    return contratos.sort((a, b) => {
-      const campo = this.ordenacao.campo;
-      const direcao = this.ordenacao.direcao === 'asc' ? 1 : -1;
+      return true;
+    });
 
-      // Caso algum dos valores seja nulo/indefinido, coloca no final
-      if (!a[campo] && b[campo]) return direcao;
-      if (a[campo] && !b[campo]) return -direcao;
-      if (!a[campo] && !b[campo]) return 0;
+    console.log(`Contratos após filtragem: ${contratosFiltrados.length} de ${this.contratos.length}`);
 
-      // Converte para string para comparação
-      const valorA = String(a[campo]).toLowerCase();
-      const valorB = String(b[campo]).toLowerCase();
+    // Ordena os contratos
+    return [...contratosFiltrados].sort((a, b) => {
+      let valorA: any = a[this.ordenacao.campo as keyof Contrato];
+      let valorB: any = b[this.ordenacao.campo as keyof Contrato];
 
-      // Ordenação numérica para campos numéricos
-      if (campo === 'valorContrato') {
-        return direcao * (Number(valorA) - Number(valorB));
+      // Trata valores nulos/undefined
+      if (valorA == null) valorA = '';
+      if (valorB == null) valorB = '';
+
+      // Converte para string para comparação segura
+      const strA = String(valorA).toLowerCase();
+      const strB = String(valorB).toLowerCase();
+
+      // Ordenação numérica para campos específicos
+      if (this.ordenacao.campo === 'valorContrato' ||
+          this.ordenacao.campo === 'id') {
+        return this.ordenacao.direcao === 'asc'
+          ? Number(valorA) - Number(valorB)
+          : Number(valorB) - Number(valorA);
       }
 
       // Ordenação por data para campos de data
-      if (campo === 'dataInicio' || campo === 'dataFim') {
-        const dataA = new Date(valorA).getTime();
-        const dataB = new Date(valorB).getTime();
-        return direcao * (dataA - dataB);
+      if (this.ordenacao.campo === 'dataInicio' ||
+          this.ordenacao.campo === 'dataFim') {
+        const dateA = new Date(valorA).getTime();
+        const dateB = new Date(valorB).getTime();
+        return this.ordenacao.direcao === 'asc'
+          ? dateA - dateB
+          : dateB - dateA;
       }
 
       // Ordenação alfabética padrão para outros campos
-      if (valorA < valorB) return -direcao;
-      if (valorA > valorB) return direcao;
+      if (strA < strB) {
+        return this.ordenacao.direcao === 'asc' ? -1 : 1;
+      }
+      if (strA > strB) {
+        return this.ordenacao.direcao === 'asc' ? 1 : -1;
+      }
       return 0;
     });
   }
@@ -271,6 +293,13 @@ export class ContratoListComponent implements OnInit, OnDestroy {
   aplicarFiltrosEOrdenacao(): void {
     console.log('Aplicando filtros e ordenação...');
     console.log('Total de contratos antes de aplicar filtros:', this.contratos.length);
+
+    // Força a detecção de mudanças
+    this.contratos = [...this.contratos];
+
+    // Atualiza os totais
+    this.calcularTotais();
+
     console.log('Total de contratos após filtros:', this.contratosFiltrados.length);
     console.log('Contratos filtrados:', this.contratosFiltrados);
   }
@@ -284,7 +313,6 @@ export class ContratoListComponent implements OnInit, OnDestroy {
       this.ordenacao.campo = campo;
       this.ordenacao.direcao = 'asc';
     }
-    this.aplicarFiltrosEOrdenacao();
   }
 
   limparFiltros(): void {
@@ -304,50 +332,27 @@ export class ContratoListComponent implements OnInit, OnDestroy {
   confirmarExclusao(contrato: Contrato, event: Event): void {
     console.log('Botão de exclusão clicado para o contrato:', contrato);
     event.stopPropagation();
-
-    console.log('Abrindo modal de confirmação...');
-    const modalRef = this.modalService.open(ConfirmModalComponent, { centered: true });
-    modalRef.componentInstance.mensagem = `Tem certeza que deseja excluir o contrato ${contrato.numeroContrato}?`;
-
-    modalRef.result.then(
-      (result) => {
-        console.log('Resultado do modal:', result);
-        if (result === 'confirmar') {
-          console.log('Confirmada a exclusão do contrato ID:', contrato.id);
-          this.excluirContrato(contrato.id!);
-        }
-      },
-      (reason) => {
-        console.log('Modal fechado com razão:', reason);
-        // Usuário cancelou a exclusão
-      }
-    ).catch(error => {
-      console.error('Erro no modal de confirmação:', error);
-    });
-  }
-
-  private excluirContrato(id: number): void {
     console.log(`Iniciando exclusão do contrato ID: ${id}`);
-
+    
     if (!id) {
       console.error('ID de contrato inválido para exclusão');
       this.alertaService.adicionarMensagem('ID de contrato inválido', 'erro');
       return;
     }
-
+    
     this.contratoService.removerContrato(id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (sucesso) => {
           console.log(`Resposta da exclusão do contrato ID ${id}:`, sucesso);
-
+          
           if (sucesso) {
             // Atualiza a lista de contratos
             this.carregarContratos();
-
+            
             // Exibir mensagem de sucesso
             this.alertaService.adicionarMensagem('Contrato excluído com sucesso!', 'sucesso');
-
+            
             // Força a detecção de mudanças
             this.cdRef.detectChanges();
           } else {
@@ -358,28 +363,34 @@ export class ContratoListComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Erro ao excluir contrato:', error);
           let mensagemErro = 'Ocorreu um erro ao tentar excluir o contrato.';
-
+          
           if (error?.message) {
             mensagemErro += ` Detalhes: ${error.message}`;
           }
-
+          
           this.alertaService.adicionarMensagem(mensagemErro, 'erro');
+          // Exibir mensagem de erro
+          const mensagem = 'Erro ao excluir o contrato. Tente novamente.';
+          this.alertaService.adicionarMensagem(mensagem, 'erro');
         }
       });
   }
 
   estaAtivo(contrato: Contrato): boolean {
-    if (!contrato.dataFim) return false;
-    const dataFim = new Date(contrato.dataFim);
     const hoje = new Date();
+    const dataFim = new Date(contrato.dataFim);
     return dataFim >= hoje;
   }
 
   getStatusContrato(contrato: Contrato): { texto: string; classe: string } {
-    if (this.estaAtivo(contrato)) {
-      return { texto: 'Ativo', classe: 'status-ativo' };
+    const dias = this.diasParaVencer(contrato);
+
+    if (dias <= 0) {
+      return { texto: 'Expirado', classe: 'expirado' };
+    } else if (dias <= 30) {
+      return { texto: 'Próximo do vencimento', classe: 'alerta' };
     } else {
-      return { texto: 'Expirado', classe: 'status-expirado' };
+      return { texto: 'Ativo', classe: 'ativo' };
     }
   }
 
@@ -416,29 +427,50 @@ export class ContratoListComponent implements OnInit, OnDestroy {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      const diferenca = fim.getTime() - hoje.getTime();
-      const dias = Math.ceil(diferenca / (1000 * 60 * 60 * 24));
+calcularTotais(): void {
+const contratosFiltrados = this.contratosFiltrados;
+this.totalContratos = contratosFiltrados.length;
+this.totalValorContratos = contratosFiltrados.reduce(
+  (total, contrato) => total + (contrato.valorContrato || 0),
+  0
+);
+}
 
-      return dias >= 0 ? dias : 0;
-    } catch (error) {
-      console.error('Erro ao calcular dias para vencer:', error);
-      return 0;
-    }
-  }
+verificarAlertas(): void {
+this.alertaVisual = this.contratos.some(contrato => {
+  const dias = this.diasParaVencer(contrato);
+  return dias > 0 && dias <= 30;
+});
+}
 
-  // Método para depuração
-  debugContrato(contrato: any): string {
-    if (!contrato) return 'Contrato é nulo/indefinido';
+diasParaVencer(contrato: Contrato): number {
+try {
+  const fim = new Date(contrato.dataFim);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-    try {
-      const contratoCopy = { ...contrato };
-      // Remove campos muito grandes para facilitar a leitura
-      delete contratoCopy.anexos;
-      delete contratoCopy.historicoAlteracoes;
+  const diferenca = fim.getTime() - hoje.getTime();
+  const dias = Math.ceil(diferenca / (1000 * 60 * 60 * 24));
 
-      return JSON.stringify(contratoCopy, null, 2);
-    } catch (error) {
-      return `Erro ao formatar contrato: ${error}`;
-    }
-  }
+  return dias >= 0 ? dias : 0;
+} catch (error) {
+  console.error('Erro ao calcular dias para vencer:', error);
+  return 0;
+}
+}
+
+// Método para depuração
+debugContrato(contrato: any): string {
+if (!contrato) return 'Contrato é nulo/indefinido';
+  
+try {
+  const contratoCopy = { ...contrato };
+  // Remove campos muito grandes para facilitar a leitura
+  delete contratoCopy.anexos;
+  delete contratoCopy.historicoAlteracoes;
+  
+  return JSON.stringify(contratoCopy, null, 2);
+} catch (error) {
+  return `Erro ao formatar contrato: ${error}`;
+}
 }

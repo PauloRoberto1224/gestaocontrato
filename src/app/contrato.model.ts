@@ -1,6 +1,13 @@
+export interface Contratada {
+  id?: number;
+  nome: string;
+  // Adicione outros campos da contratada conforme necessário
+}
+
 export interface Contrato {
   id?: number;
   numeroContrato: string;
+  objetoContrato?: string;
   dataInicio: string;
   dataFim: string;
   anexoContrato?: string;
@@ -14,4 +21,5 @@ export interface Contrato {
   valorContrato?: number;
   situacao?: 'ativo' | 'inativo' | 'encerrado';
   observacoes?: string;
+  contratada?: Contratada;
 }

@@ -1,165 +1,144 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Contrato } from './contrato.model';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError, Subscription } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { IndexedDbService } from './services/indexed-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ContratoService {
-  private contratos: Contrato[] = [
-    {
-      id: 1,
-      numeroContrato: 'CTR-2023-001',
-      dataInicio: '2023-01-01',
-      dataFim: '2023-12-31',
-      nomeFiscal: 'João Silva',
-      nomeGestor: 'Maria Santos',
-      nomeEmpresa: 'Empresa Exemplo',
-      cnpj: '12.345.678/0001-90',
-      matriculaFiscal: '12345',
-      termoAditivo: 'contrato inicial',
-      valorContrato: 150000,
-      situacao: 'ativo',
-      observacoes: 'Contrato de serviço de consultoria'
-    },
-    {
-      id: 2,
-      numeroContrato: 'CTR-2023-002',
-      dataInicio: '2023-02-01',
-      dataFim: '2023-11-30',
-      nomeFiscal: 'Ana Costa',
-      nomeGestor: 'Carlos Souza',
-      nomeEmpresa: 'Outra Empresa',
-      cnpj: '98.765.432/0001-81',
-      matriculaFiscal: '54321',
-      termoAditivo: 'primeiro termo aditivo',
-      valorContrato: 200000,
-      situacao: 'ativo',
-      observacoes: 'Contrato de manutenção'
-    }
-  ];
+export class ContratoService implements OnDestroy {
+  private contratosSubject = new BehaviorSubject<Contrato[]>([]);
+  private dbSubscription: Subscription | null = null;
+  private isInitialized = false;
 
-  private contratosSubject = new BehaviorSubject<Contrato[]>(this.contratos);
+  constructor(private dbService: IndexedDbService) {
+    this.initializeDatabase();
+  }
+
+  private initializeDatabase(): void {
+    this.dbSubscription = this.dbService.isReady().subscribe(isReady => {
+      if (isReady && !this.isInitialized) {
+        this.isInitialized = true;
+        this.carregarContratosIniciais();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.dbSubscription) {
+      this.dbSubscription.unsubscribe();
+    }
+  }
+
+  private carregarContratosIniciais(): void {
+    this.getContratos().subscribe({
+      next: (contratos) => {
+        this.contratosSubject.next(contratos);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar contratos iniciais:', err);
+      }
+    });
+  }
 
   /**
    * Obtém a lista de todos os contratos
    */
   getContratos(): Observable<Contrato[]> {
-    return this.contratosSubject.asObservable();
+    return this.dbService.getContratos().pipe(
+      tap(contratos => {
+        this.contratosSubject.next(contratos);
+      }),
+      catchError(err => {
+        console.error('Erro ao buscar contratos:', err);
+        return of([]);
+      })
+    );
   }
 
   /**
    * Obtém um contrato pelo ID
+   * @param id O ID do contrato a ser encontrado
    */
-  getContrato(id: number): Observable<Contrato | undefined> {
-    const contrato = this.contratos.find(c => c.id === id);
-    return of(contrato);
+  getContratoPorId(id: number): Observable<Contrato | undefined> {
+    return this.dbService.getContrato(id).pipe(
+      catchError(err => {
+        console.error('Erro ao buscar contrato:', err);
+        return of(undefined);
+      })
+    );
   }
 
   /**
    * Verifica se um número de contrato já existe
    */
   verificarNumeroContratoExistente(numeroContrato: string, excludeId?: number): Observable<boolean> {
-    const contratoExistente = this.contratos.find(
-      c => c.numeroContrato === numeroContrato && c.id !== excludeId
+    return this.getContratos().pipe(
+      map(contratos => {
+        return contratos.some(c => 
+          c.numeroContrato === numeroContrato && 
+          (excludeId === undefined || c.id !== excludeId)
+        );
+      })
     );
-    return of(!!contratoExistente);
   }
 
   /**
    * Adiciona um novo contrato
+   * @param contrato O contrato a ser adicionado
    */
-  adicionarContrato(contrato: Omit<Contrato, 'id'>): Observable<Contrato> {
-    // Gera um ID único para o novo contrato
-    const novoId = Math.max(0, ...this.contratos.map(c => c.id || 0)) + 1;
-    
-    // Valida o número do contrato
-    return this.verificarNumeroContratoExistente(contrato.numeroContrato).pipe(
-      switchMap(numeroExiste => {
-        if (numeroExiste) {
-          return throwError(() => new Error('Já existe um contrato com este número.'));
-        }
-        
-        const novoContrato: Contrato = {
-          ...contrato,
-          id: novoId
-        };
-        
-        this.contratos = [...this.contratos, novoContrato];
-        this.contratosSubject.next([...this.contratos]);
-        
-        return of(novoContrato);
+  adicionarContrato(contrato: Contrato): Observable<Contrato> {
+    return this.dbService.salvarContrato(contrato).pipe(
+      tap(novoContrato => {
+        // Atualiza a lista de contratos após adicionar
+        this.getContratos().subscribe();
+      }),
+      catchError(err => {
+        console.error('Erro ao adicionar contrato:', err);
+        return throwError(() => new Error('Erro ao adicionar contrato'));
       })
     );
   }
 
   /**
    * Atualiza um contrato existente
+   * @param contrato O contrato com as atualizações
    */
-  atualizarContrato(contratoAtualizado: Contrato): Observable<Contrato> {
-    if (!contratoAtualizado.id) {
-      return throwError(() => new Error('ID do contrato não fornecido'));
+  atualizarContrato(contrato: Contrato): Observable<Contrato> {
+    if (!contrato.id) {
+      return throwError(() => new Error('ID do contrato é obrigatório para atualização'));
     }
-
-    return this.getContrato(contratoAtualizado.id).pipe(
-      switchMap(contratoExistente => {
-        if (!contratoExistente) {
-          return throwError(() => new Error('Contrato não encontrado'));
-        }
-
-        // Verifica se o número do contrato foi alterado e se já existe
-        if (contratoAtualizado.numeroContrato && 
-            contratoAtualizado.numeroContrato !== contratoExistente.numeroContrato) {
-          return this.verificarNumeroContratoExistente(
-            contratoAtualizado.numeroContrato, 
-            contratoAtualizado.id
-          ).pipe(
-            switchMap(numeroExiste => {
-              if (numeroExiste) {
-                return throwError(() => new Error('Já existe um contrato com este número.'));
-              }
-              return this.salvarContratoAtualizado(contratoAtualizado);
-            })
-          );
-        }
-        return this.salvarContratoAtualizado(contratoAtualizado);
+    
+    return this.dbService.salvarContrato(contrato).pipe(
+      tap(() => {
+        // Atualiza a lista de contratos após atualizar
+        this.getContratos().subscribe();
+      }),
+      catchError(err => {
+        console.error('Erro ao atualizar contrato:', err);
+        return throwError(() => new Error('Erro ao atualizar contrato'));
       })
     );
   }
 
-  private salvarContratoAtualizado(contrato: Contrato): Observable<Contrato> {
-    const index = this.contratos.findIndex(c => c.id === contrato.id);
-    if (index === -1) {
-      return throwError(() => new Error('Contrato não encontrado para atualização'));
-    }
-    
-    this.contratos = [
-      ...this.contratos.slice(0, index),
-      contrato,
-      ...this.contratos.slice(index + 1)
-    ];
-    
-    this.contratosSubject.next([...this.contratos]);
-    return of(contrato);
-  }
-
   /**
    * Remove um contrato pelo ID
+   * @param id O ID do contrato a ser removido
    */
   removerContrato(id: number): Observable<boolean> {
-    const index = this.contratos.findIndex(c => c.id === id);
-    if (index === -1) {
-      return of(false);
-    }
-    
-    this.contratos = [
-      ...this.contratos.slice(0, index),
-      ...this.contratos.slice(index + 1)
-    ];
-    
-    this.contratosSubject.next([...this.contratos]);
-    return of(true);
+    return this.dbService.removerContrato(id).pipe(
+      tap(sucesso => {
+        if (sucesso) {
+          // Atualiza a lista de contratos após remover
+          this.getContratos().subscribe();
+        }
+      }),
+      catchError(err => {
+        console.error('Erro ao remover contrato:', err);
+        return throwError(() => new Error('Erro ao remover contrato'));
+      })
+    );
   }
 
   /**

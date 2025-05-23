@@ -23,7 +23,7 @@
           </span>
           <input
             type="text"
-            class="form-control bg-dar  sk text-white border-secondary"
+            class="form-control bg-dark text-white border-secondary"
             placeholder="Buscar por número, empresa ou fiscal..."
             [(ngModel)]="termoBusca"
             (keyup.enter)="aplicarFiltrosEOrdenacao()">
@@ -54,6 +54,19 @@
       </div>
     </div>
   </div>
+
+  <!-- Contêiner de depuração temporário -->
+  <div class="debug-container" *ngIf="contratos.length > 0">
+    <h6>Depuração - Contratos</h6>
+    <div>Total de contratos: {{contratos.length}}</div>
+    <div>Primeiro contrato:</div>
+    <pre>{{contratos[0] | json}}</pre>
+    <div>IDs dos primeiros 5 contratos:</div>
+    <div *ngFor="let c of contratos | slice:0:5">
+      ID: {{c?.id || 'nulo'}} | Número: {{c?.numeroContrato || 'nulo'}}
+    </div>
+  </div>
+
   <div class="card-body">
     <div *ngIf="carregando" class="text-white p-3">
       <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
@@ -87,9 +100,29 @@
             <td>
               <div class="d-flex align-items-center gap-2">
                 <span>{{ c.numeroContrato }}</span>
-                <button *ngIf="c.id" class="btn btn-sm btn-outline-warning" (click)="editarContrato(c.id)" title="Editar contrato">
-                  <i class="fas fa-edit"></i>
-                </button>
+                <div class="d-flex gap-2 align-items-center">
+                  <!-- Botão de editar -->
+                  <button class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
+                          [title]="c.id ? 'Editar contrato' : 'ID de contrato inválido'"
+                          [disabled]="!c.id"
+                          (click)="editarContrato(c.id || 0); $event.stopPropagation()">
+                    <i class="fas fa-edit"></i>
+                  </button>
+
+                  <!-- Botão de excluir -->
+                  <button class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                          [title]="c.id ? 'Excluir contrato' : 'ID de contrato inválido'"
+                          [disabled]="!c.id"
+                          (click)="confirmarExclusao(c, $event); $event.stopPropagation()">
+                    <i class="fas fa-trash"></i>
+                  </button>
+
+                  <!-- Indicador de ID inválido -->
+                  <span *ngIf="!c.id" class="badge-invalid-id">ID inválido</span>
+
+                  <!-- Informações de depuração -->
+                  <div class="d-none">{{ debugContrato(c) }}</div>
+                </div>
               </div>
             </td>
             <td>{{ c.nomeEmpresa }}</td>
@@ -118,14 +151,20 @@
               </span>
             </td>
             <td>
-              <span [ngClass]="{'alerta-texto': diasParaVencer(c) <= 30}">{{ diasParaVencer(c) }}</span>
+              <span [ngClass]="{'alerta-texto': diasParaVencer(c) <= 30}">
+                {{ diasParaVencer(c) }}
+              </span>
             </td>
             <td>{{ c.observacoes }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div *ngIf="!carregando && !contratos.length" class="text-white p-4 text-center">Nenhum contrato cadastrado.</div>
+
+    <div *ngIf="!carregando && !contratos.length" class="text-white p-4 text-center">
+      Nenhum contrato cadastrado.
+    </div>
   </div>
 </div>
-<audio id="alerta-audio" src="assets/alerta.mp3" preload="auto"></audio>
+
+<audio id="alerta-audio" src="assets/sounds/alerta.mp3" preload="auto"></audio>

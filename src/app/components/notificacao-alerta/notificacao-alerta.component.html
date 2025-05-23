@@ -1,0 +1,151 @@
+<div class="notificacao-container" [class.has-alerts]="alertas.length > 0" #alertasDropdown>
+  <div class="d-flex align-items-center">
+    <button class="btn btn-pausar-alerta me-2" 
+            (click)="alternarPausaAlerta($event)" 
+            [title]="getTextoPausa()" 
+            [class.text-muted]="alertaService.isAlertaPausado()"
+            [disabled]="isBotaoPausaDesabilitado()"
+            [class.disabled]="isBotaoPausaDesabilitado()"
+            [attr.aria-label]="getTextoPausa()">
+      <i class="fas fa-{{ getIconePausa() }}" aria-hidden="true"></i>
+      <span class="visually-hidden">{{ getTextoPausa() }}</span>
+    </button>
+    <button class="btn btn-notificacao" 
+            (click)="toggleAlertas($event)"
+            [class.active]="mostrarAlertas"
+            [attr.aria-expanded]="mostrarAlertas"
+            [attr.aria-label]="alertas.length > 0 ? 'Ver notificações (' + alertas.length + ')' : 'Sem notificações'">
+      <i class="fas fa-bell" aria-hidden="true"></i>
+      <span class="badge bg-danger" 
+            *ngIf="alertas.length > 0" 
+            [class.pulsar]="!alertaService.isAlertaPausado()"
+            [attr.aria-hidden]="true">
+        {{ alertas.length }}
+      </span>
+      <span class="visually-hidden">
+        {{ alertas.length }} {{ alertas.length === 1 ? 'notificação' : 'notificações' }}
+      </span>
+    </button>
+  </div>
+
+  <div class="alertas-dropdown" *ngIf="mostrarAlertas" [@slideInOut]>
+    <div class="alertas-overlay" (click)="toggleAlertas($event)" tabindex="-1"></div>
+    <div class="alertas-content">
+      <div class="alertas-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0" id="alertas-titulo">Alertas de Vencimento</h5>
+        <div class="d-flex align-items-center">
+          <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                  [title]="getTextoPausa()"
+                  (click)="$event.stopPropagation(); alternarPausaAlerta()">
+            <i class="fas fa-{{ getIconePausa() }}" aria-hidden="true"></i>
+            <span class="ms-1 d-none d-sm-inline">{{ getTextoPausa() }}</span>
+          </button>
+          <button type="button" class="btn-close" 
+                  (click)="$event.stopPropagation(); toggleAlertas()"
+                  aria-label="Fechar menu de notificações"></button>
+        </div>
+      </div>
+      
+      <div class="alertas-body" (click)="$event.stopPropagation()">
+        <!-- Alertas Altos -->
+        <div *ngFor="let alerta of getAlertasPorNivel('alto'); let i = index" 
+             class="alert alert-danger d-flex align-items-center alert-item"
+             [class.alert-highlight]="isAlerta31Dias(alerta)"
+             [class.pulsar-bg]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()"
+             [@fadeInOut]="'in'"
+             (@fadeInOut.done)="onAnimationDone($event, alerta, i, 'alto')">
+          <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong class="me-2">{{ alerta.contrato.numeroContrato }}</strong>
+              <small class="text-muted">{{ alerta.contrato.nomeEmpresa }}</small>
+            </div>
+            <div class="small mt-1">
+              <span class="dias-restantes" [class.text-blink]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()">
+                {{ alerta.mensagem }}
+                <span *ngIf="isAlerta31Dias(alerta)" class="badge bg-dark ms-2">31 dias!</span>
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn-close ms-2" 
+                  (click)="fecharAlerta(alertas.indexOf(alerta), $event)" 
+                  [attr.aria-label]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato"
+                  [title]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato">
+            <span class="visually-hidden">Fechar</span>
+          </button>
+        </div>
+
+        <!-- Alertas Médios -->
+        <div *ngFor="let alerta of getAlertasPorNivel('medio'); let i = index" 
+             class="alert alert-warning d-flex align-items-center alert-item"
+             [class.alert-highlight]="isAlerta31Dias(alerta)"
+             [class.pulsar-bg]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()"
+             [@fadeInOut]="'in'"
+             (@fadeInOut.done)="onAnimationDone($event, alerta, i, 'medio')">
+          <i class="fas fa-exclamation-circle me-2" aria-hidden="true"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong class="me-2">{{ alerta.contrato.numeroContrato }}</strong>
+              <small class="text-muted">{{ alerta.contrato.nomeEmpresa }}</small>
+            </div>
+            <div class="small mt-1">
+              <span class="dias-restantes" [class.text-blink]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()">
+                {{ alerta.mensagem }}
+                <span *ngIf="isAlerta31Dias(alerta)" class="badge bg-dark ms-2">31 dias!</span>
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn-close ms-2" 
+                  (click)="fecharAlerta(alertas.indexOf(alerta), $event)" 
+                  [attr.aria-label]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato"
+                  [title]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato">
+            <span class="visually-hidden">Fechar</span>
+          </button>
+        </div>
+
+        <!-- Alertas Baixos -->
+        <div *ngFor="let alerta of getAlertasPorNivel('baixo'); let i = index" 
+             class="alert alert-info d-flex align-items-center alert-item"
+             [class.alert-highlight]="isAlerta31Dias(alerta)"
+             [class.pulsar-bg]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()"
+             [@fadeInOut]="'in'"
+             (@fadeInOut.done)="onAnimationDone($event, alerta, i, 'baixo')">
+          <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong class="me-2">{{ alerta.contrato.numeroContrato }}</strong>
+              <small class="text-muted">{{ alerta.contrato.nomeEmpresa }}</small>
+            </div>
+            <div class="small mt-1">
+              <span class="dias-restantes" [class.text-blink]="isAlerta31Dias(alerta) && !alertaService.isAlertaPausado()">
+                {{ alerta.mensagem }}
+                <span *ngIf="isAlerta31Dias(alerta)" class="badge bg-dark ms-2">31 dias!</span>
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn-close ms-2" 
+                  (click)="fecharAlerta(alertas.indexOf(alerta), $event)" 
+                  [attr.aria-label]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato"
+                  [title]="'Fechar alerta do contrato ' + alerta.contrato.numeroContrato">
+            <span class="visually-hidden">Fechar</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="alertas-footer d-flex justify-content-between align-items-center p-2 border-top">
+        <small class="text-muted">
+          {{ alertas.length }} alerta{{ alertas.length !== 1 ? 's' : '' }} 
+          ({{ getAlertasPorNivel('alto').length }} alto{{ getAlertasPorNivel('alto').length !== 1 ? 's' : '' }}, 
+          {{ getAlertasPorNivel('medio').length }} médio{{ getAlertasPorNivel('medio').length !== 1 ? 's' : '' }}, 
+          {{ getAlertasPorNivel('baixo').length }} baixo{{ getAlertasPorNivel('baixo').length !== 1 ? 's' : '' }})
+        </small>
+        <button class="btn btn-sm btn-outline-secondary" 
+                (click)="fecharAlertas($event)" 
+                [disabled]="alertas.length === 0"
+                [attr.aria-label]="alertas.length > 0 ? 'Fechar todos os alertas' : 'Nenhum alerta para fechar'">
+          <i class="fas fa-times me-1" aria-hidden="true"></i> Fechar todos
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
