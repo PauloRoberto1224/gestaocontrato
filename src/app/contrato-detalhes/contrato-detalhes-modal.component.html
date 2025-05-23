@@ -1,0 +1,135 @@
+<div class="container-fluid py-4">
+  <!-- Cabeçalho com título e botões de ação -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">DETALHES DO {{ contrato?.numeroContrato || 'CONTRATO' }}</h2>
+    <div>
+      <button class="btn btn-outline-secondary me-2" (click)="voltar()">
+        <i class="fas fa-arrow-left me-1"></i> Voltar
+      </button>
+      <button class="btn btn-primary" (click)="editarContrato()">
+        <i class="fas fa-edit me-1"></i> Editar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card principal com as informações -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h5 class="text-muted mb-3">Informações do Contrato</h5>
+          <table class="table table-borderless">
+            <tr>
+              <th class="w-40">Nº Contrato</th>
+              <td>{{ contrato?.numeroContrato || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Empresa</th>
+              <td>{{ contrato?.nomeEmpresa || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Valor (R$)</th>
+              <td>{{ (contrato?.valorContrato | currency:'BRL':'symbol':'1.2-2') || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Situação</th>
+              <td>
+                <span class="badge"
+                      [ngClass]="{
+                        'bg-success': contrato?.situacao === 'ativo',
+                        'bg-warning': contrato?.situacao === 'inativo',
+                        'bg-danger': contrato?.situacao === 'encerrado',
+                        'bg-secondary': !contrato || !contrato.situacao
+                      }">
+                  {{ getSituacaoFormatada() }}
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="col-md-6">
+          <h5 class="text-muted mb-3">Período</h5>
+          <table class="table table-borderless">
+            <tr>
+              <th class="w-40">Início</th>
+              <td>{{ (contrato?.dataInicio | date:'dd/MM/yyyy') || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Fim</th>
+              <td>{{ (contrato?.dataFim | date:'dd/MM/yyyy') || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Dias para vencer</th>
+              <td>
+                <span class="badge"
+                      [ngClass]="{
+                        'bg-success': diasParaVencer != null && diasParaVencer > 30,
+                        'bg-warning': diasParaVencer != null && diasParaVencer <= 30 && diasParaVencer > 0,
+                        'bg-danger': diasParaVencer != null && diasParaVencer <= 0,
+                        'bg-secondary': diasParaVencer == null
+                      }">
+                  {{ (diasParaVencer != null) ? (diasParaVencer + ' dia' + (diasParaVencer !== 1 ? 's' : '')) : '-' }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th>Termo Aditivo</th>
+              <td>{{ contrato?.termoAditivo || '-' }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h5 class="text-muted mb-3">Responsáveis</h5>
+          <table class="table table-borderless">
+            <tr>
+              <th class="w-40">Fiscal</th>
+              <td>{{ contrato?.nomeFiscal || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Fiscal Suplente</th>
+              <td>{{ contrato?.nomeFiscalSuplente || '-' }}</td>
+            </tr>
+            <tr>
+              <th>Gestor</th>
+              <td>{{ contrato?.nomeGestor || '-' }}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="col-md-6">
+          <h5 class="text-muted mb-3">Anexos</h5>
+          <div class="d-flex flex-column gap-2">
+            <a *ngIf="contrato?.anexoContrato"
+               [href]="'http://localhost:8000/uploads/' + (contrato?.anexoContrato || '')"
+               target="_blank"
+               class="btn btn-outline-primary text-start">
+              <i class="fas fa-file-pdf me-2"></i> Visualizar Contrato
+            </a>
+            <a *ngIf="contrato?.anexoPortaria"
+               [href]="'http://localhost:8000/uploads/' + (contrato?.anexoPortaria || '')"
+               target="_blank"
+               class="btn btn-outline-success text-start">
+              <i class="fas fa-file-contract me-2"></i> Visualizar Portaria
+            </a>
+            <div *ngIf="!contrato?.anexoContrato && !contrato?.anexoPortaria" class="text-muted">
+              Nenhum anexo disponível
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <h5 class="text-muted mb-3">Observações</h5>
+          <div class="p-3 bg-light rounded">
+            {{ contrato?.observacoes || 'Nenhuma observação cadastrada.' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

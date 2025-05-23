@@ -297,8 +297,27 @@ export class ContratoListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/editar', id]);
   }
 
-  visualizarContrato(id: number): void {
-    this.router.navigate(['/visualizar', id]);
+  visualizarContrato(contrato: Contrato, event?: MouseEvent): void {
+    // Previne o comportamento padrão do link/clique se necessário
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    if (!contrato?.id) {
+      console.error('Não é possível visualizar: contrato ou ID inválido', contrato);
+      this.alertaService.adicionarMensagem('Não foi possível abrir os detalhes do contrato.', 'erro');
+      return;
+    }
+
+    console.log('Abrindo detalhes do contrato ID:', contrato.id, 'em uma nova aba');
+    
+    // Abre uma nova aba com a rota de visualização do contrato
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/contratos', contrato.id, 'detalhes'])
+    );
+    
+    window.open(url, '_blank');
   }
 
   confirmarExclusao(contrato: Contrato, event: Event): void {

@@ -44,23 +44,38 @@ export class ContratoService implements OnDestroy {
   }
 
   /**
-   * Obtém a lista de todos os contratos
+   * Obtém um contrato pelo ID
+   * @param id ID do contrato
+   * @returns Observable com o contrato encontrado ou erro se não encontrado
    */
-  getContratos(): Observable<Contrato[]> {
+  getContratoPorId(id: number): Observable<Contrato> {
+    const getContrato = () => this.dbService.getContrato(id).pipe(
+      map(contrato => {
+        if (!contrato) {
+          throw new Error('Contrato não encontrado');
+        }
+        return contrato;
+      }),
+      catchError(error => {
+        console.error('Erro ao buscar contrato por ID:', error);
+        return throwError(() => new Error('Erro ao buscar contrato'));
+      })
+    );
+
     if (!this.isInitialized) {
       return this.dbService.isReady().pipe(
-        switchMap(() => this.dbService.getContratos()),
-        tap(contratos => {
-          this.contratosSubject.next(contratos);
-        }),
-        catchError(err => {
-          console.error('Erro ao buscar contratos:', err);
-          return of([]);
-        })
+        switchMap(() => getContrato())
       );
     }
     
-    return this.dbService.getContratos().pipe(
+    return getContrato();
+  }
+
+  /**
+   * Obtém a lista de todos os contratos
+   */
+  getContratos(): Observable<Contrato[]> {
+    const loadContratos = () => this.dbService.getContratos().pipe(
       tap(contratos => {
         this.contratosSubject.next(contratos);
       }),
@@ -69,19 +84,14 @@ export class ContratoService implements OnDestroy {
         return of([]);
       })
     );
-  }
 
-  /**
-   * Obtém um contrato pelo ID
-   * @param id O ID do contrato a ser encontrado
-   */
-  getContratoPorId(id: number): Observable<Contrato | undefined> {
-    return this.dbService.getContrato(id).pipe(
-      catchError(err => {
-        console.error('Erro ao buscar contrato:', err);
-        return of(undefined);
-      })
-    );
+    if (!this.isInitialized) {
+      return this.dbService.isReady().pipe(
+        switchMap(() => loadContratos())
+      );
+    }
+    
+    return loadContratos();
   }
 
   /**

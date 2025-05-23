@@ -247,15 +247,18 @@ $zindex-alert: 1090;
       @include transition($transition-base);
       position: relative;
       width: 100%;
-      max-width: 380px;
-      height: 100%;
+      min-width: 320px;
+      max-width: 90vw;
       max-height: 80vh;
       margin: 10vh 10px 0 0;
-      background: $light;
-      @include border-radius(10px);
-      @include box-shadow(0 8px 25px rgba(0, 0, 0, 0.2));
-      display: flex;
-      flex-direction: column;
+      background: $card-bg;
+      border: 1px solid $border-color;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+      z-index: $zindex-modal;
+      color: $text-light;
       transform: translateY(20px);
       opacity: 0;
       pointer-events: auto;
@@ -575,6 +578,7 @@ $zindex-alert: 1090;
   display: inline-block;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
+  z-index: 1050; /* Garante que fique acima do menu lateral */
   color: $gray-900;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -704,10 +708,10 @@ $zindex-alert: 1090;
   }
 
   .alertas-dropdown {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: map-get($spacers, 2);
+    position: fixed;
+    right: 20px;
+    top: 70px; /* Ajuste para ficar abaixo do cabeçalho */
+    margin-top: 0;
     width: 350px;
     max-width: calc(100vw - #{map-get($spacers, 3) * 2});
     background: $light;

@@ -1,19 +1,45 @@
 <div class="app-container">
-  <header class="main-header">
-    <h1>Gestão de Contratos</h1>
-    <nav>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Novo Contrato</a>
-      <a routerLink="/contratos" routerLinkActive="active">Lista de Contratos</a>
+  <!-- Botão do Menu Móvel -->
+  <button class="mobile-menu-toggle" (click)="toggleSidebar()" aria-label="Alternar menu">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <!-- Overlay do Menu Móvel -->
+  <div class="sidebar-overlay" (click)="closeSidebar()" [class.visible]="isMobileMenuOpen"></div>
+  
+  <!-- Menu Lateral -->
+  <aside class="sidebar" [class.mobile-visible]="isMobileMenuOpen">
+    <div class="sidebar-header">
+      <h2>Menu</h2>
+    </div>
+    <nav class="sidebar-nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <i class="fas fa-file-contract"></i>
+        <span>Novo Contrato</span>
+      </a>
+      <a routerLink="/contratos" routerLinkActive="active">
+        <i class="fas fa-list"></i>
+        <span>Lista de Contratos</span>
+      </a>
     </nav>
-  </header>
+  </aside>
 
-  <main class="main-content">
-    <router-outlet></router-outlet>
-  </main>
+  <!-- Conteúdo Principal -->
+  <div class="main-wrapper" [class.menu-open]="isMobileMenuOpen">
+    <header class="main-header">
+      <h1>Gestão de Contratos</h1>
+      <div class="header-actions">
+        <app-notificacao-alerta></app-notificacao-alerta>
+      </div>
+    </header>
 
-  <app-notificacao-alerta></app-notificacao-alerta>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
 
-  <footer class="bottom-bar">
-    Sistema de Gestão de Contratos &copy; {{ currentYear }}
-  </footer>
+
+    <footer class="bottom-bar">
+      Sistema de Gestão de Contratos &copy; {{ currentYear }}
+    </footer>
+  </div>
 </div>

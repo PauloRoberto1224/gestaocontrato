@@ -1,0 +1,133 @@
+<div class="modal-header bg-dark text-white">
+  <h5 class="modal-title">Detalhes do Contrato</h5>
+  <button type="button" class="btn-close btn-close-white" (click)="fechar()" aria-label="Fechar"></button>
+</div>
+
+<div class="modal-body bg-dark text-white">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">Informações Básicas</h6>
+      <table class="table table-sm table-borderless text-white">
+        <tbody>
+          <tr>
+            <th class="w-40 text-muted">Número do Contrato:</th>
+            <td>{{ contrato.numeroContrato || '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Empresa:</th>
+            <td>{{ contrato.nomeEmpresa || '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Valor:</th>
+            <td>R$ {{ (contrato.valorContrato | number:'1.2-2') || '0,00' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Situação:</th>
+            <td>
+              <span [ngClass]="{
+                'badge': true,
+                'bg-success': contrato.situacao === 'ativo',
+                'bg-warning': contrato.situacao === 'inativo',
+                'bg-danger': contrato.situacao === 'encerrado'
+              }">
+                {{ contrato.situacao ? (contrato.situacao | titlecase) : '-' }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th class="text-muted">Dias para vencer:</th>
+            <td>
+              <span [ngClass]="{
+                'badge': true,
+                'bg-success': diasParaVencer > 30,
+                'bg-warning': diasParaVencer <= 30 && diasParaVencer > 0,
+                'bg-danger': diasParaVencer <= 0
+              }">
+                {{ diasParaVencer }} dia{{ diasParaVencer !== 1 ? 's' : '' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">Datas</h6>
+      <table class="table table-sm table-borderless text-white">
+        <tbody>
+          <tr>
+            <th class="w-40 text-muted">Início:</th>
+            <td>{{ contrato.dataInicio ? (contrato.dataInicio | date:'dd/MM/yyyy') : '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Fim:</th>
+            <td>{{ contrato.dataFim ? (contrato.dataFim | date:'dd/MM/yyyy') : '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Termo Aditivo:</th>
+            <td>{{ contrato.termoAditivo || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">Responsáveis</h6>
+      <table class="table table-sm table-borderless text-white">
+        <tbody>
+          <tr>
+            <th class="w-40 text-muted">Fiscal:</th>
+            <td>{{ contrato.nomeFiscal || '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Fiscal Suplente:</th>
+            <td>{{ contrato.nomeFiscalSuplente || '-' }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Gestor:</th>
+            <td>{{ contrato.nomeGestor || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">Anexos</h6>
+      <div class="d-flex flex-column gap-2">
+        <a *ngIf="contrato?.anexoContrato"
+           href="http://localhost:8000/uploads/{{contrato.anexoContrato}}"
+           target="_blank"
+           class="btn btn-outline-primary">
+          <i class="fas fa-file-pdf me-2"></i> Visualizar Contrato
+        </a>
+        <a *ngIf="contrato?.anexoPortaria"
+           href="http://localhost:8000/uploads/{{contrato.anexoPortaria}}"
+           target="_blank"
+           class="btn btn-outline-success">
+          <i class="fas fa-file-contract me-2"></i> Visualizar Portaria
+        </a>
+        <div *ngIf="!contrato?.anexoContrato && !contrato?.anexoPortaria" class="text-muted">
+          Nenhum anexo disponível
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <h6 class="text-primary mb-3">Observações</h6>
+      <div class="p-3 bg-dark-subtle text-white rounded">
+        {{ contrato.observacoes || 'Nenhuma observação cadastrada.' }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer bg-dark border-secondary">
+  <button type="button" class="btn btn-outline-light" (click)="fechar()">
+    <i class="fas fa-times me-1"></i> Fechar
+  </button>
+  <button type="button" class="btn btn-primary" (click)="editar()">
+    <i class="fas fa-edit me-1"></i> Editar Contrato
+  </button>
+</div>
