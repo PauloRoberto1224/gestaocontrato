@@ -78,70 +78,55 @@
     </div>
 
     <div *ngIf="!carregando && contratos.length" class="table-responsive">
-      <table class="table table-dark table-striped table-hover mb-0">
+      <table class="table table-dark table-striped table-hover mb-0 align-middle">
         <thead>
           <tr>
-            <th>Nº Contrato</th>
-            <th>Empresa</th>
-            <th>Fiscal</th>
-            <th>Gestor</th>
-            <th>Início</th>
-            <th>Fim</th>
-            <th>Termo</th>
-            <th>Anexos</th>
-            <th>Valor</th>
-            <th>Situação</th>
-            <th>Dias para vencer</th>
-            <th>Observações</th>
+            <th class="text-center">Nº Contrato</th>
+            <th class="text-start">Empresa</th>
+            <th class="text-start">Fiscal</th>
+            <th class="text-start">Fiscal Suplente</th>
+            <th class="text-start">Gestor</th>
+            <th class="text-center">Início</th>
+            <th class="text-center">Fim</th>
+            <th class="text-center">Termo</th>
+            <th class="text-center">Anexos</th>
+            <th class="text-end">Valor (R$)</th>
+            <th class="text-center">Situação</th>
+            <th class="text-center">Dias para vencer</th>
+            <th class="text-start">Observações</th>
+            <th class="text-center">Ações</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let c of contratos" [class.alerta]="diasParaVencer(c) <= 30">
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                <span>{{ c.numeroContrato }}</span>
-                <div class="d-flex gap-2 align-items-center">
-                  <!-- Botão de editar -->
-                  <button class="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
-                          [title]="c.id ? 'Editar contrato' : 'ID de contrato inválido'"
-                          [disabled]="!c.id"
-                          (click)="editarContrato(c.id || 0); $event.stopPropagation()">
-                    <i class="fas fa-edit"></i>
-                  </button>
-
-                  <!-- Botão de excluir -->
-                  <button class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
-                          [title]="c.id ? 'Excluir contrato' : 'ID de contrato inválido'"
-                          [disabled]="!c.id"
-                          (click)="confirmarExclusao(c, $event); $event.stopPropagation()">
-                    <i class="fas fa-trash"></i>
-                  </button>
-
-                  <!-- Indicador de ID inválido -->
-                  <span *ngIf="!c.id" class="badge-invalid-id">ID inválido</span>
-
-                  <!-- Informações de depuração -->
-                  <div class="d-none">{{ debugContrato(c) }}</div>
-                </div>
+            <td class="text-center">{{ c.numeroContrato }}</td>
+            <td class="text-start">{{ c.nomeEmpresa }}</td>
+            <td class="text-start">{{ c.nomeFiscal }}</td>
+            <td class="text-start">{{ c.nomeFiscalSuplente || '-' }}</td>
+            <td class="text-start">{{ c.nomeGestor }}</td>
+            <td class="text-center">{{ c.dataInicio | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center">{{ c.dataFim | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center">{{ c.termoAditivo }}</td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <a *ngIf="c.anexoContrato" 
+                   href="http://localhost:8000/uploads/{{c.anexoContrato}}" 
+                   target="_blank" 
+                   class="btn btn-outline-primary"
+                   title="Ver Contrato">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+                <a *ngIf="c.anexoPortaria" 
+                   href="http://localhost:8000/uploads/{{c.anexoPortaria}}" 
+                   target="_blank" 
+                   class="btn btn-outline-success"
+                   title="Ver Portaria">
+                  <i class="fas fa-file-contract"></i>
+                </a>
               </div>
             </td>
-            <td>{{ c.nomeEmpresa }}</td>
-            <td>{{ c.nomeFiscal }}</td>
-            <td>{{ c.nomeGestor }}</td>
-            <td>{{ c.dataInicio | date:'shortDate' }}</td>
-            <td>{{ c.dataFim | date:'shortDate' }}</td>
-            <td>{{ c.termoAditivo }}</td>
-            <td>
-              <a *ngIf="c.anexoContrato" href="http://localhost:8000/uploads/{{c.anexoContrato}}" target="_blank" class="btn btn-primary btn-sm">
-                <i class="fas fa-file-pdf"></i> Contrato
-              </a>
-              <span *ngIf="c.anexoContrato && c.anexoPortaria"> | </span>
-              <a *ngIf="c.anexoPortaria" href="http://localhost:8000/uploads/{{c.anexoPortaria}}" target="_blank" class="btn btn-success btn-sm">
-                <i class="fas fa-file-pdf"></i> Portaria Fiscal
-              </a>
-            </td>
-            <td>R$ {{c.valorContrato | number:'1.2-2'}}</td>
-            <td>
+            <td class="text-end">{{c.valorContrato | number:'1.2-2'}}</td>
+            <td class="text-center">
               <span [ngClass]="{
                 'text-success': c.situacao === 'ativo',
                 'text-warning': c.situacao === 'inativo',
@@ -150,12 +135,39 @@
                 {{c.situacao}}
               </span>
             </td>
-            <td>
-              <span [ngClass]="{'alerta-texto': diasParaVencer(c) <= 30}">
+            <td class="text-center">
+              <span [ngClass]="{
+                'badge': true,
+                'bg-success': diasParaVencer(c) > 30,
+                'bg-warning': diasParaVencer(c) <= 30 && diasParaVencer(c) > 0,
+                'bg-danger': diasParaVencer(c) <= 0
+              }">
                 {{ diasParaVencer(c) }}
               </span>
             </td>
-            <td>{{ c.observacoes }}</td>
+            <td class="text-start">{{ c.observacoes }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-2 justify-content-center">
+                <!-- Botão de editar -->
+                <button class="btn btn-sm btn-outline-warning"
+                        [title]="c.id ? 'Editar contrato' : 'ID de contrato inválido'"
+                        [disabled]="!c.id"
+                        (click)="editarContrato(c.id || 0); $event.stopPropagation()">
+                  <i class="fas fa-edit"></i>
+                </button>
+                
+                <!-- Botão de excluir -->
+                <button class="btn btn-sm btn-outline-danger"
+                        [title]="c.id ? 'Excluir contrato' : 'ID de contrato inválido'"
+                        [disabled]="!c.id"
+                        (click)="confirmarExclusao(c, $event); $event.stopPropagation()">
+                  <i class="fas fa-trash"></i>
+                </button>
+                
+                <!-- Indicador de ID inválido -->
+                <span *ngIf="!c.id" class="badge bg-danger">ID inválido</span>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>

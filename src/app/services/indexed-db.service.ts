@@ -33,45 +33,72 @@ export class IndexedDbService {
 
   private initDatabase(): void {
     console.log('Iniciando abertura do IndexedDB...');
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = (event) => {
-      const error = (event.target as IDBRequest).error;
-      console.error('Erro ao abrir o banco de dados:', error);
-      this.dbReady.error(error);
-    };
-
-    request.onsuccess = (event) => {
-      this.db = (event.target as IDBOpenDBRequest).result;
-      console.log('Banco de dados aberto com sucesso:', this.db);
-
-      // Adiciona tratamento de erros para a conexão
-      this.db.onerror = (event) => {
-        console.error('Erro na conexão com o banco de dados:', event);
+      request.onerror = (event) => {
+        const error = (event.target as IDBRequest).error;
+        console.error('Erro ao abrir o banco de dados:', error);
+        this.dbReady.error(error);
       };
 
-      this.dbReady.next(true);
-    };
+      request.onsuccess = (event) => {
+        try {
+          this.db = (event.target as IDBOpenDBRequest).result;
+          console.log('Banco de dados aberto com sucesso:', this.db);
 
-    request.onupgradeneeded = (event) => {
-      console.log('Atualização do banco de dados necessária');
-      const db = (event.target as IDBOpenDBRequest).result;
+          // Adiciona tratamento de erros para a conexão
+          this.db.onerror = (event) => {
+            console.error('Erro na conexão com o banco de dados:', event);
+          };
 
-      // Cria o objeto de armazenamento (tabela) se não existir
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        console.log('Criando objeto de armazenamento...');
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+          this.db.onversionchange = () => {
+            this.db?.close();
+            console.log('Banco de dados está desatualizado. Recarregando...');
+            window.location.reload();
+          };
 
-        // Cria índices para consultas rápidas
-        store.createIndex('numeroContrato', 'numeroContrato', { unique: true });
-        store.createIndex('dataFim', 'dataFim', { unique: false });
-        store.createIndex('situacao', 'situacao', { unique: false });
+          this.dbReady.next(true);
+        } catch (error) {
+          console.error('Erro ao configurar o banco de dados:', error);
+          this.dbReady.error(error);
+        }
+      };
 
-        console.log('Objeto de armazenamento criado com sucesso');
-      } else {
-        console.log('Objeto de armazenamento já existe');
-      }
-    };
+      request.onupgradeneeded = (event) => {
+        try {
+          console.log('Atualização do banco de dados necessária');
+          const db = (event.target as IDBOpenDBRequest).result;
+
+          // Cria o objeto de armazenamento (tabela) se não existir
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            console.log('Criando objeto de armazenamento...');
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+
+            // Cria índices para consultas rápidas
+            store.createIndex('numeroContrato', 'numeroContrato', { unique: true });
+            store.createIndex('dataFim', 'dataFim', { unique: false });
+            store.createIndex('situacao', 'situacao', { unique: false });
+
+            console.log('Objeto de armazenamento criado com sucesso');
+          } else {
+            console.log('Objeto de armazenamento já existe');
+          }
+        } catch (error) {
+          console.error('Erro durante a atualização do banco de dados:', error);
+          // Se houver erro na atualização, fecha a conexão
+          const db = (event.target as IDBOpenDBRequest).result;
+          if (db) {
+            db.close();
+          }
+          throw error;
+        }
+      };
+    } catch (error) {
+      console.error('Falha crítica ao inicializar o banco de dados:', error);
+      this.dbReady.error(error);
+    }
   }
 
   private withStore<T>(
@@ -172,9 +199,16 @@ export class IndexedDbService {
   getContratos(): Observable<Contrato[]> {
     console.log('IndexedDB: Iniciando busca por todos os contratos');
 
+    // Se o banco de dados não estiver pronto, espera ele ficar pronto primeiro
     if (!this.db) {
-      console.error('Banco de dados não inicializado ao tentar buscar contratos');
-      return of([]);
+      console.log('Banco de dados não inicializado, aguardando inicialização...');
+      return this.isReady().pipe(
+        switchMap(() => this.getContratos()),
+        catchError(error => {
+          console.error('Erro ao aguardar inicialização do banco de dados:', error);
+          return of([]);
+        })
+      );
     }
 
     return new Observable<Contrato[]>(subscriber => {
@@ -192,6 +226,7 @@ export class IndexedDbService {
             // Se não tiver ID, cria um temporário baseado no índice (será substituído no salvamento)
             id: contrato.id || `temp-${Date.now()}-${index}`
           }));
+
 
           // Ordena por data de término (mais recente primeiro)
           try {

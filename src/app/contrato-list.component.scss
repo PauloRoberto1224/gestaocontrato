@@ -1,14 +1,16 @@
+// Estilos principais do componente
 .contrato-list {
   margin: 0;
   max-width: 100%;
   width: 100%;
-  height: 100vh; /* Ocupa 100% da altura da viewport */
+  height: 100vh;
   background: #000000;
   border-radius: 0;
   box-shadow: none;
   padding: 20px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Ajuste para o conteúdo principal */
@@ -41,6 +43,26 @@
   overflow: auto;
   margin: 0;
   padding: 0;
+  position: relative;
+
+  /* Barra de rolagem personalizada */
+  &::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 5px;
+
+    &:hover {
+      background: #555;
+    }
+  }
 }
 
 .card-header {
@@ -49,82 +71,290 @@
   border-bottom: 2px solid #333;
 }
 
-/* Estilos para os botões de ação na tabela */
+/* Estilos para a tabela */
 table {
+  width: 100%;
+  margin-bottom: 0;
+  color: #fff;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+
   th, td {
     vertical-align: middle;
-    white-space: nowrap;
+    padding: 12px 8px;
+    border-top: 1px solid #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+
+    /* Permite quebra de linha */
+    white-space: normal;
+
+    /* Larguras específicas para cada coluna */
+    &:nth-child(1) { width: 7%; }   /* Nº Contrato */
+    &:nth-child(2) { width: 9%; }   /* Empresa */
+    &:nth-child(3) { width: 6%; }   /* Fiscal */
+    &:nth-child(4) { width: 12%; }   /* Fiscal Suplente */
+    &:nth-child(5) { width: 6%; }   /* Gestor */
+    &:nth-child(6) {
+      width: 8%;   /* Início */
+      min-width: 90px;
+    }
+    &:nth-child(7) {
+      width: 8%;   /* Fim */
+      min-width: 90px;
+    }
+    &:nth-child(8) { width: 5%; }   /* Termo */
+    &:nth-child(9) { width: 9%; }  /* Anexos */
+    &:nth-child(10) {
+      width: 8%;   /* Valor */
+      min-width: 90px;
+    }
+    &:nth-child(11) { width: 6%; }  /* Situação */
+    &:nth-child(12) { width: 8%; }  /* Dias para vencer */
+    &:nth-child(13) { width: 8%; }  /* Observações */
+    &:nth-child(14) { width: 5%; }  /* Ações */
+
+    /* Cabeçalhos */
+    &.text-center { text-align: center; }
+    &.text-right { text-align: right; }
   }
-  
+
+  thead th {
+    background-color: #1a1a1a;
+    border-bottom: 2px solid #333;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+
+    /* Garante que o cabeçalho fique por cima do conteúdo ao rolar */
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -2px;
+      height: 2px;
+      background-color: #333;
+    }
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    &.alerta {
+      background-color: rgba(220, 53, 69, 0.1);
+
+      &:hover {
+        background-color: rgba(220, 53, 69, 0.15) !important;
+      }
+    }
+  }
+
+  /* Estilos para os botões de ação na tabela */
   .btn-action {
     opacity: 0.7;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     margin: 0 2px;
-    
+
     &:hover {
       opacity: 1;
     }
   }
-  
-  .btn-outline-warning {
-    color: #ffc107;
-    border-color: #ffc107;
-    
-    &:hover {
-      color: #000;
-      background-color: #ffc107;
+
+    /* Container dos botões de ação */
+  .btn-group-action {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start;
+    padding: 4px 0;
+
+    /* Garante que os botões fiquem alinhados corretamente */
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+
+      i {
+        font-size: 16px;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
     }
   }
-  
-  .btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
-    
-    &:hover {
-      color: #fff;
-      background-color: #dc3545;
+
+  /* Estilo para a coluna de ações */
+  td:last-child {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+
+    .btn {
+      margin: 2px;
+      min-width: 30px;
+      height: 30px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        font-size: 14px;
+      }
+    }
+
+    .badge {
+      font-size: 0.7em;
+      padding: 0.25em 0.4em;
     }
   }
-  
-  /* Garante que os botões fiquem alinhados corretamente */
-  .d-flex {
-    gap: 5px;
+
+  /* Estilo para a coluna de anexos */
+  td:nth-child(8) {
+    text-align: center;
+    padding: 8px 4px !important;
+
+    .anexos-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .anexo-item {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-anexo {
+      width: 100%;
+      max-width: 120px;
+      margin: 0;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+
+      i {
+        margin: 0;
+        font-size: 0.9em;
+      }
+
+      /* Esconde o texto em telas pequenas */
+      .text {
+        display: none;
+        margin-left: 4px;
+      }
+
+      @media (min-width: 1200px) {
+        .text {
+          display: inline;
+        }
+      }
+    }
   }
 }
 
-/* Estilos para os botões de ação na tabela */
+/* Estilos para os botões pequenos */
+/* Estilos para os botões de anexo */
+.btn-group-sm {
+  .btn {
+    padding: 0.25rem 0.5rem;
+    min-width: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    i {
+      font-size: 0.9rem;
+    }
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    &.btn-outline-primary {
+      border-color: #4a90e2;
+      color: #4a90e2;
+      
+      &:hover {
+        background-color: rgba(74, 144, 226, 0.1);
+      }
+    }
+    
+    &.btn-outline-success {
+      border-color: #28a745;
+      color: #28a745;
+      
+      &:hover {
+        background-color: rgba(40, 167, 69, 0.1);
+      }
+    }
+  }
+}
+
 .btn-sm {
-  // Garante que o botão seja visível e tenha um tamanho mínimo
-  min-width: 32px;
-  width: 32px;
-  height: 32px;
+  min-width: 34px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  display: inline-flex !important; // Força a exibição
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 1 !important; // Garante que não está transparente
-  visibility: visible !important; // Garante que está visível
   position: relative;
   z-index: 1;
-  border-width: 1px !important;
-  border-style: solid !important;
-  transition: all 0.15s ease-in-out;
-  
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+
   i {
     font-size: 14px;
     display: inline-block !important;
   }
-  
+
   &:hover:not(:disabled) {
     transform: scale(1.1);
     z-index: 2;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
+
   &:active:not(:disabled) {
     transform: scale(0.98);
   }
-  
+
   &[disabled] {
     opacity: 0.6 !important;
     cursor: not-allowed;
@@ -132,84 +362,223 @@ table {
     border-color: #e9ecef !important;
     color: #adb5bd !important;
   }
-  
-  // Estilo específico para o botão de excluir
+
+  /* Estilo específico para o botão de excluir */
   &.btn-outline-danger {
     color: #dc3545 !important;
     border-color: #dc3545 !important;
     background-color: rgba(220, 53, 69, 0.1) !important;
-    
+
     &:hover:not(:disabled), &:focus:not(:disabled) {
       background-color: #dc3545 !important;
       color: white !important;
       border-color: #dc3545 !important;
     }
-    
+
     &:active:not(:disabled) {
       background-color: #c82333 !important;
       border-color: #bd2130 !important;
     }
   }
-  
-  // Estilo específico para o botão de editar
+
+  /* Estilo específico para o botão de editar */
   &.btn-outline-warning {
     color: #ffc107 !important;
     border-color: #ffc107 !important;
     background-color: rgba(255, 193, 7, 0.1) !important;
-    
+
     &:hover:not(:disabled), &:focus:not(:disabled) {
       background-color: #ffc107 !important;
       color: #000 !important;
       border-color: #ffc107 !important;
     }
-    
+
     &:active:not(:disabled) {
       background-color: #e0a800 !important;
       border-color: #d39e00 !important;
     }
-    
-/* Estilos para o badge de ID inválido */
-.badge-invalid-id {
-  font-size: 8px;
-  padding: 2px 4px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 3px;
-  margin-left: 4px;
-  white-space: nowrap;
-}
-}
-
-/* Ajuste para linhas da tabela */
-tr {
-  transition: background-color 0.2s ease-in-out;
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
   }
-  
-  &.alerta {
-    background-color: rgba(220, 53, 69, 0.1);
-    
-    &:hover {
-      background-color: rgba(220, 53, 69, 0.15) !important;
-    }
+
+  /* Estilos para o badge de ID inválido */
+  .badge-invalid-id {
+    font-size: 8px;
+    padding: 2px 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 3px;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  /* Estilo para a coluna de valor */
+  td:nth-child(9) {
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-align: right;
+    padding-right: 15px;
+    font-size: 0.95em;
+  }
+
+  /* Estilo para as colunas de data */
+  td:nth-child(5),
+  td:nth-child(6) {
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.9em;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  /* Estilo para cabeçalhos das colunas de data e valor */
+  th:nth-child(5),
+  th:nth-child(6),
+  th:nth-child(9) {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
   }
 }
 
 /* Melhorias na responsividade */
+@media (max-width: 1600px) {
+  table {
+    th, td {
+      font-size: 0.85em;
+      padding: 8px 6px;
+    }
+
+    /* Ajusta larguras para telas menores */
+    th:nth-child(1), td:nth-child(1) { width: 8%; }
+    th:nth-child(2), td:nth-child(2) { width: 10%; }
+    th:nth-child(3), td:nth-child(3),
+    th:nth-child(4), td:nth-child(4) { width: 7%; }
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(6), td:nth-child(6) { width: 6%; }
+    th:nth-child(7), td:nth-child(7) { width: 8%; }
+    th:nth-child(8), td:nth-child(8) { width: 9%; }
+    th:nth-child(9), td:nth-child(9) { width: 7%; }
+    th:nth-child(10), td:nth-child(10) { width: 8%; }
+    th:nth-child(11), td:nth-child(11) { width: 8%; }
+    th:nth-child(12), td:nth-child(12) { width: 10%; }
+    th:nth-child(13), td:nth-child(13) { width: 9%; }
+  }
+}
+
+@media (max-width: 1440px) {
+  table {
+    th, td {
+      font-size: 0.9em;
+      padding: 8px 6px;
+      /* Ajusta larguras para telas menores */
+      &:nth-child(1) { width: 8%; }
+      &:nth-child(2) { width: 10%; }
+      &:nth-child(3),
+      &:nth-child(4) { width: 7%; }
+      &:nth-child(5),
+      &:nth-child(6) { width: 5%; }
+      &:nth-child(7) { width: 7%; }
+      &:nth-child(8) { width: 9%; }
+      &:nth-child(9),
+      &:nth-child(10) { width: 6%; }
+      &:nth-child(11) { width: 7%; }
+      &:nth-child(12) { width: 10%; }
+      &:nth-child(13) { width: 7%; }
+    }
+  }
+}
+
 @media (max-width: 1200px) {
   .table-responsive {
+    display: block;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
-  .table {
-    min-width: 1000px;
+}
+
+/* Estilos para o scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+
+  &:hover {
+    background: #5a5a5a;
   }
+}
+
+/* Estilos para o placeholder de carregamento */
+.loading-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6c757d;
+  font-size: 1.1rem;
+
+  .spinner-border {
+    margin-right: 10px;
+  }
+}
+
+/* Estilos para mensagens de alerta */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+
+  .alert-heading {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin-bottom: 0;
+  }
+
+  &.alert-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid #dc3545;
+    color: #dc3545;
+  }
+
+  &.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-left: 4px solid #198754;
+    color: #198754;
+  }
+
+  &.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid #ffc107;
+    color: #ffc107;
+  }
+
+  &.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-left: 4px solid #0dcaf0;
+    color: #0dcaf0;
+  }
+}
+
+/* Estilos para mensagens de aviso de alerta */
+.alerta-texto {
+  color: #ff5252;
+  font-weight: bold;
 }
 
 .card-title {
@@ -298,18 +667,12 @@ tr:hover {
   background-color: #1f1f1f;
 }
 
-.alerta-texto {
-  color: #ff5252;
-  font-weight: bold;
-}
-
-/* Links legíveis em fundo escuro */
 a {
   color: #4fc3f7;
   text-decoration: none;
-}
 
-a:hover {
-  text-decoration: underline;
-  color: #81d4fa;
+  &:hover {
+    text-decoration: underline;
+    color: #81d4fa;
+  }
 }

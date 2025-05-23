@@ -19,9 +19,10 @@
                   [ngClass]="{'is-invalid': submitted && f['numeroContrato'].errors}"
                   placeholder="Ex: CTR-2023-001"
                 >
-                <div *ngIf="submitted && f['numeroContrato'].errors" class="invalid-feedback">
+                <div *ngIf="(submitted || f['numeroContrato'].touched) && f['numeroContrato'].errors" class="invalid-feedback">
                   <div *ngIf="f['numeroContrato'].errors?.['required']">Número do contrato é obrigatório</div>
                   <div *ngIf="f['numeroContrato'].errors?.['pattern']">Formato inválido. Use CTR-AAAA-NNN</div>
+                  <div *ngIf="f['numeroContrato'].errors?.['numeroContratoExistente']">Este número de contrato já está em uso</div>
                 </div>
               </div>
 
@@ -60,7 +61,7 @@
             </div>
 
             <div class="row">
-              <!-- Nome do Fiscal -->
+              <!-- Nome do Fiscal e Matrícula -->
               <div class="col-md-6 mb-3">
                 <label for="nomeFiscal" class="form-label">Nome do Fiscal</label>
                 <input
@@ -69,10 +70,64 @@
                   id="nomeFiscal"
                   formControlName="nomeFiscal"
                   [ngClass]="{'is-invalid': submitted && f['nomeFiscal'].errors}"
+                  [title]="'Matrícula: ' + (f['matriculaFiscal'].value || 'Não informada')"
                 >
                 <div *ngIf="submitted && f['nomeFiscal'].errors" class="invalid-feedback">
                   <div *ngIf="f['nomeFiscal'].errors?.['required']">Nome do fiscal é obrigatório</div>
                   <div *ngIf="f['nomeFiscal'].errors?.['minlength']">Mínimo de 3 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Matrícula do Fiscal -->
+              <div class="col-md-3 mb-3">
+                <label for="matriculaFiscal" class="form-label">Matrícula do Fiscal</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="matriculaFiscal"
+                  formControlName="matriculaFiscal"
+                  [ngClass]="{'is-invalid': submitted && f['matriculaFiscal'].errors}"
+                  maxlength="7"
+                  pattern="[0-9]{7}"
+                >
+                <div *ngIf="submitted && f['matriculaFiscal'].errors" class="invalid-feedback">
+                  <div *ngIf="f['matriculaFiscal'].errors?.['required']">Matrícula é obrigatória</div>
+                  <div *ngIf="f['matriculaFiscal'].errors?.['pattern']">A matrícula deve ter 7 dígitos</div>
+                </div>
+              </div>
+
+              <!-- Nome do Fiscal Suplente -->
+              <div class="col-md-6 mb-3">
+                <label for="nomeFiscalSuplente" class="form-label">Nome do Fiscal Suplente</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nomeFiscalSuplente"
+                  formControlName="nomeFiscalSuplente"
+                  [ngClass]="{'is-invalid': submitted && f['nomeFiscalSuplente'] && f['nomeFiscalSuplente'].errors}"
+                  [title]="'Matrícula: ' + (f['matriculaFiscalSuplente'].value || 'Não informada')"
+                >
+                <div *ngIf="submitted && f['nomeFiscalSuplente'] && f['nomeFiscalSuplente'].errors" class="invalid-feedback">
+                  <div *ngIf="f['nomeFiscalSuplente'].errors?.['required']">Nome do fiscal suplente é obrigatório</div>
+                  <div *ngIf="f['nomeFiscalSuplente'].errors?.['minlength']">Mínimo de 3 caracteres</div>
+                </div>
+              </div>
+
+              <!-- Matrícula do Fiscal Suplente -->
+              <div class="col-md-3 mb-3">
+                <label for="matriculaFiscalSuplente" class="form-label">Matrícula do Fiscal Suplente</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="matriculaFiscalSuplente"
+                  formControlName="matriculaFiscalSuplente"
+                  [ngClass]="{'is-invalid': submitted && f['matriculaFiscalSuplente'] && f['matriculaFiscalSuplente'].errors}"
+                  maxlength="7"
+                  pattern="[0-9]{7}"
+                >
+                <div *ngIf="submitted && f['matriculaFiscalSuplente'] && f['matriculaFiscalSuplente'].errors" class="invalid-feedback">
+                  <div *ngIf="f['matriculaFiscalSuplente'].errors['required']">Matrícula é obrigatória</div>
+                  <div *ngIf="f['matriculaFiscalSuplente'].errors['pattern']">A matrícula deve ter 7 dígitos</div>
                 </div>
               </div>
 
@@ -200,42 +255,47 @@
             </div>
 
             <!-- Anexos -->
-      <div class="row">
-        <div class="col-md-6">
-          <label for="anexoContrato" class="form-label">Anexar Contrato (PDF, até 5MB)</label>
-          <label class="custom-file-upload">
-            <input
-              type="file"
-              id="anexoContrato"
-              class="file-input"
-              (change)="onFileChange($event, 'contrato')"
-              accept=".pdf"
-            >
-            <span class="file-label">
-              <i class="fas fa-file-pdf"></i>
-              Selecionar arquivo
-              <span class="file-name" *ngIf="f['anexoContrato'].value">{{ f['anexoContrato'].value.name }}</span>
-            </span>
-          </label>
-        </div>
-        <div class="col-md-6">
-          <label for="anexoPortaria" class="form-label">Anexar Portaria de Fiscal (PDF, até 5MB)</label>
-          <label class="custom-file-upload">
-            <input
-              type="file"
-              id="anexoPortaria"
-              class="file-input"
-              (change)="onFileChange($event, 'portaria')"
-              accept=".pdf"
-            >
-            <span class="file-label">
-              <i class="fas fa-file-pdf"></i>
-              Selecionar arquivo
-              <span class="file-name" *ngIf="f['anexoPortaria'].value">{{ f['anexoPortaria'].value.name }}</span>
-            </span>
-          </label>
-        </div>
-      </div>
+            <div class="mb-4">
+              <h5 class="mb-3">Anexos</h5>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="anexoContrato" class="form-label d-block mb-2">Contrato (PDF, até 5MB)</label>
+                  <div class="input-group">
+                    <input
+                      type="file"
+                      id="anexoContrato"
+                      class="form-control"
+                      (change)="onFileChange($event, 'contrato')"
+                      accept=".pdf"
+                    >
+                    <span class="input-group-text">
+                      <i class="fas fa-file-pdf text-danger"></i>
+                    </span>
+                  </div>
+                  <div *ngIf="f['anexoContrato'].value" class="form-text text-truncate mt-1">
+                    {{ f['anexoContrato'].value.name }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="anexoPortaria" class="form-label d-block mb-2">Portaria de Fiscal (PDF, até 5MB)</label>
+                  <div class="input-group">
+                    <input
+                      type="file"
+                      id="anexoPortaria"
+                      class="form-control"
+                      (change)="onFileChange($event, 'portaria')"
+                      accept=".pdf"
+                    >
+                    <span class="input-group-text">
+                      <i class="fas fa-file-pdf text-danger"></i>
+                    </span>
+                  </div>
+                  <div *ngIf="f['anexoPortaria'].value" class="form-text text-truncate mt-1">
+                    {{ f['anexoPortaria'].value.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- Observações -->
             <div class="mb-3">

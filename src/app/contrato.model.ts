@@ -13,6 +13,8 @@ export interface Contrato {
   anexoContrato?: string;
   anexoPortaria?: string;
   nomeFiscal: string;
+  nomeFiscalSuplente: string;
+  matriculaFiscalSuplente: string;
   nomeGestor: string;
   nomeEmpresa: string;
   cnpj?: string;

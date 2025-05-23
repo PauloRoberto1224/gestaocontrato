@@ -11,6 +11,7 @@ export class ContratoService implements OnDestroy {
   private contratosSubject = new BehaviorSubject<Contrato[]>([]);
   private dbSubscription: Subscription | null = null;
   private isInitialized = false;
+  public contratoId: number | null = null;
 
   constructor(private dbService: IndexedDbService) {
     this.initializeDatabase();
@@ -46,6 +47,19 @@ export class ContratoService implements OnDestroy {
    * Obtém a lista de todos os contratos
    */
   getContratos(): Observable<Contrato[]> {
+    if (!this.isInitialized) {
+      return this.dbService.isReady().pipe(
+        switchMap(() => this.dbService.getContratos()),
+        tap(contratos => {
+          this.contratosSubject.next(contratos);
+        }),
+        catchError(err => {
+          console.error('Erro ao buscar contratos:', err);
+          return of([]);
+        })
+      );
+    }
+    
     return this.dbService.getContratos().pipe(
       tap(contratos => {
         this.contratosSubject.next(contratos);
@@ -80,6 +94,26 @@ export class ContratoService implements OnDestroy {
           c.numeroContrato === numeroContrato && 
           (excludeId === undefined || c.id !== excludeId)
         );
+      })
+    );
+  }
+
+  /**
+   * Verifica se um número de contrato já existe (versão síncrona para validação de formulário)
+   */
+  verificarNumeroContratoUnico(control: any): Promise<any> | Observable<any> {
+    if (!control.value) {
+      return of(null);
+    }
+    
+    return this.verificarNumeroContratoExistente(control.value, this.contratoId || undefined).pipe(
+      map(existe => {
+        console.log('Verificando número de contrato:', control.value, 'Já existe?', existe);
+        return existe ? { numeroContratoExistente: true } : null;
+      }),
+      catchError((error) => {
+        console.error('Erro ao verificar número de contrato:', error);
+        return of(null);
       })
     );
   }

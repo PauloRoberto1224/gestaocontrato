@@ -3,47 +3,55 @@ import { Contrato } from '../contrato.model';
 import { BehaviorSubject, from, Observable, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
-// Tipos para SQL.js
-declare module 'sql.js' {
-  interface Config {
-    locateFile?: (filename: string) => string;
-  }
-  
-  interface Database {
-    run: (sql: string, params?: any) => void;
-    exec: (sql: string, params?: any) => { columns: string[]; values: any[][] }[];
-    prepare: (sql: string, params?: any) => Statement;
-    getRowsModified: () => number;
-  }
-  
-  interface Statement {
-    bind: (params: any) => void;
-    step: () => boolean;
-    getAsObject: () => any;
-    free: () => void;
-  }
-  
-  interface SqlJsStatic {
-    Database: new (data?: any) => Database;
-  }
-  
-  function init(config?: Config): Promise<SqlJsStatic>;
+// Import SQL.js types
+type InitSqlJs = {
+  (config?: { locateFile?: (filename: string) => string }): Promise<SqlJsStatic>;
+};
+
+interface SqlJsStatic {
+  Database: new (data?: any) => Database;
 }
 
-declare const initSqlJs: typeof import('sql.js').init;
+interface Database {
+  run: (sql: string, params?: any) => void;
+  exec: (sql: string) => { columns: string[]; values: any[][] }[];
+  prepare: (sql: string, params?: any) => Statement;
+  getRowsModified: () => number;
+  close: () => void;
+}
 
+interface Statement {
+  bind: (params: any) => void;
+  step: () => boolean;
+  getAsObject: () => any;
+  get: (params: any[]) => any;
+  getColumnNames: () => string[];
+  getColumnName: (n: number) => string;
+  freemem: () => number;
+  free: () => boolean;
+  reset: () => void;
+}
+
+// Import the module
+const initSqlJs = (window as any).initSqlJs as InitSqlJs || (() => {
+  console.warn('initSqlJs not found on window, using dynamic import');
+  return import('sql.js').then(module => module.default);
+})();
+
+// Type declarations for SQLite compatibility
 interface SQLiteDB {
   run: (sql: string, params?: any[]) => void;
   exec: (sql: string) => { values: any[][] }[];
-  prepare: (sql: string, params?: any[]) => any;
+  values: any[][];
+  prepare: (sql: string, params?: any[]) => SQLiteStmt;
   getRowsModified: () => number;
+  close: () => void;
 }
 
-interface SQLiteStmt {
+interface SQLiteStmt extends Statement {
   bind: (params: any[]) => void;
   step: () => boolean;
-  getAsObject: () => any;
-  free: () => void;
+  free: () => boolean;
 }
 
 @Injectable({
@@ -243,10 +251,12 @@ export class DatabaseService {
           anexoContrato: row.anexoContrato || undefined,
           anexoPortaria: row.anexoPortaria || undefined,
           nomeFiscal: row.nomeFiscal,
+          nomeFiscalSuplente: row.nomeFiscalSuplente || '',
+          matriculaFiscal: row.matriculaFiscal,
+          matriculaFiscalSuplente: row.matriculaFiscalSuplente || '',
           nomeGestor: row.nomeGestor,
           nomeEmpresa: row.nomeEmpresa,
           cnpj: row.cnpj || undefined,
-          matriculaFiscal: row.matriculaFiscal,
           termoAditivo: row.termoAditivo as any,
           valorContrato: row.valorContrato !== null ? Number(row.valorContrato) : undefined,
           situacao: row.situacao as 'ativo' | 'inativo' | 'encerrado',
@@ -271,10 +281,12 @@ export class DatabaseService {
           anexoContrato: row.anexoContrato || undefined,
           anexoPortaria: row.anexoPortaria || undefined,
           nomeFiscal: row.nomeFiscal,
+          nomeFiscalSuplente: row.nomeFiscalSuplente || '',
+          matriculaFiscal: row.matriculaFiscal,
+          matriculaFiscalSuplente: row.matriculaFiscalSuplente || '',
           nomeGestor: row.nomeGestor,
           nomeEmpresa: row.nomeEmpresa,
           cnpj: row.cnpj || undefined,
-          matriculaFiscal: row.matriculaFiscal,
           termoAditivo: row.termoAditivo as any,
           valorContrato: row.valorContrato !== null ? Number(row.valorContrato) : undefined,
           situacao: row.situacao as 'ativo' | 'inativo' | 'encerrado',

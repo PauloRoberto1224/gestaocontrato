@@ -129,7 +129,12 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
   private carregarAlertas(): void {
     this.subscription.add(
       this.contratoService.getContratos().subscribe(contratos => {
-        this.alertas = this.alertaService.verificarVencimentoContratos(contratos);
+        const novosAlertas = this.alertaService.verificarVencimentoContratos(contratos);
+        
+        // Atualiza apenas se houver mudanças nos alertas
+        if (JSON.stringify(this.alertas) !== JSON.stringify(novosAlertas)) {
+          this.alertas = [...novosAlertas];
+        }
       })
     );
   }
@@ -138,6 +143,12 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
     // Remove a assinatura anterior se existir
     if (this.clickOutsideSubscription) {
       this.clickOutsideSubscription.unsubscribe();
+      this.clickOutsideSubscription = null;
+    }
+    
+    // Não configura o listener se o menu não estiver visível
+    if (!this.mostrarAlertas) {
+      return;
     }
     
     // Adiciona um atraso para garantir que o DOM foi atualizado
@@ -145,15 +156,28 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
       this.clickOutsideSubscription = fromEvent<MouseEvent>(document, 'click')
         .pipe(
           filter((event: MouseEvent) => {
+            // Se o menu não estiver visível, não processa o clique
             if (!this.mostrarAlertas || !this.alertasDropdown?.nativeElement || !this.alertasContent?.nativeElement) {
               return false;
             }
             
             const target = event.target as HTMLElement;
-            const isClickInside = this.alertasDropdown.nativeElement.contains(target) || 
-                                 target.closest('.btn-notificacao') !== null ||
-                                 target.closest('.btn-pausar-alerta') !== null;
-            return !isClickInside;
+            
+            // Verifica se o clique foi dentro do menu de notificações ou em seus elementos filhos
+            const isClickInsideDropdown = this.alertasDropdown.nativeElement.contains(target) || 
+                                        this.alertasContent.nativeElement.contains(target);
+            
+            // Verifica se o clique foi no botão de notificação ou de pausa
+            const isClickOnNotificationButton = target.closest('.btn-notificacao') !== null ||
+                                              target.closest('.btn-pausar-alerta') !== null;
+            
+            // Se o clique foi em qualquer um desses lugares, não fecha o menu
+            if (isClickInsideDropdown || isClickOnNotificationButton) {
+              return false;
+            }
+            
+            // Para todos os outros cliques, fecha o menu
+            return true;
           }),
           debounceTime(50)
         )
@@ -188,16 +212,32 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
   toggleAlertas(event?: Event): void {
     if (event) {
       event.stopPropagation();
+      event.preventDefault(); // Impede comportamentos padrão que podem estar causando o fechamento
+      
+      // Verifica se o clique foi no botão de notificação
+      const target = event.target as HTMLElement;
+      const isClickOnNotificationButton = target.closest('.btn-notificacao') !== null;
+      
+      // Se for um clique no botão de notificação, inverte o estado
+      if (isClickOnNotificationButton) {
+        this.mostrarAlertas = !this.mostrarAlertas;
+      } else {
+        // Para outros cliques, apenas fecha o menu
+        this.mostrarAlertas = false;
+      }
+    } else {
+      // Se não houver evento (chamada programática), apenas inverte o estado
+      this.mostrarAlertas = !this.mostrarAlertas;
     }
     
-    this.mostrarAlertas = !this.mostrarAlertas;
-    
-    if (this.mostrarAlertas && this.alertas.length > 0) {
-      // Para o áudio quando o usuário abrir o painel de notificações
-      this.alertaService.pararAlertaSonoro();
-      
-      // Marca os alertas como visualizados
-      this.alertaService.marcarComoVisualizado();
+    if (this.mostrarAlertas) {
+      if (this.alertas.length > 0) {
+        // Para o áudio quando o usuário abrir o painel de notificações
+        this.alertaService.pararAlertaSonoro();
+        
+        // Marca os alertas como visualizados
+        this.alertaService.marcarComoVisualizado();
+      }
       
       // Foca no conteúdo do dropdown para melhor acessibilidade
       setTimeout(() => {
@@ -205,6 +245,15 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
           this.alertasContent.nativeElement.focus();
         }
       }, 100);
+      
+      // Reconfigura o listener de clique fora apenas quando o menu é aberto
+      this.setupClickOutsideListener();
+    } else {
+      // Remove o listener de clique fora quando o menu é fechado
+      if (this.clickOutsideSubscription) {
+        this.clickOutsideSubscription.unsubscribe();
+        this.clickOutsideSubscription = null;
+      }
     }
   }
 
@@ -319,8 +368,15 @@ export class NotificacaoAlertaComponent implements OnInit, OnDestroy {
       // A animação de saída foi concluída
       console.log(`Alerta removido: ${alerta.contrato.numeroContrato} (${nivel})`);
       
-      // Força a atualização da UI após a animação
-      this.alertas = [...this.alertas];
+      // Remove o alerta do array apenas se ele ainda existir
+      const alertaIndex = this.alertas.findIndex(a => 
+        a.contrato.numeroContrato === alerta.contrato.numeroContrato && 
+        a.diasParaVencer === alerta.diasParaVencer
+      );
+      
+      if (alertaIndex !== -1) {
+        this.alertas.splice(alertaIndex, 1);
+      }
     } else {
       // A animação de entrada foi concluída
       console.log(`Animação de entrada concluída para o alerta: ${alerta.contrato.numeroContrato}`);

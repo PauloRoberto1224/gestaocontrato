@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ContratoService } from './contrato.service';
 import { Contrato } from './contrato.model';
 
@@ -26,16 +27,28 @@ export class ContratoFormComponent implements OnInit {
     private contratoService: ContratoService
   ) {
     this.contratoForm = this.formBuilder.group({
-      numeroContrato: ['', [Validators.required, Validators.pattern(/^CTR-\d{4}-\d{3}$/)]],
+      numeroContrato: [
+        '', 
+        {
+          validators: [
+            Validators.required, 
+            Validators.pattern(/^CTR-\d{4}-\d{3}$/)
+          ],
+          asyncValidators: [this.validarNumeroContratoUnico.bind(this)],
+          updateOn: 'blur'
+        }
+      ],
       dataInicio: ['', [Validators.required, this.dateValidator]],
       dataFim: ['', [Validators.required, this.dateValidator, this.endAfterStartValidator]],
       anexoContrato: [null],
       anexoPortaria: [null],
       nomeFiscal: ['', [Validators.required, Validators.minLength(3)]],
+      matriculaFiscal: ['', [Validators.required, Validators.pattern(/^\d{7}$/)]],
+      nomeFiscalSuplente: ['', [Validators.required, Validators.minLength(3)]],
+      matriculaFiscalSuplente: ['', [Validators.required, Validators.pattern(/^\d{7}$/)]],
       nomeGestor: ['', [Validators.minLength(3)]],
       nomeEmpresa: ['', [Validators.required, Validators.minLength(3)]],
       cnpj: ['', [Validators.required, Validators.pattern(/^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}\-?\d{2}$/)]],
-      matriculaFiscal: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       termoAditivo: ['contrato inicial', Validators.required],
       valorContrato: ['', [Validators.required, Validators.min(0)]],
       situacao: ['ativo', Validators.required],
@@ -56,7 +69,8 @@ export class ContratoFormComponent implements OnInit {
 
   private carregarContrato(id: number): void {
     this.loading = true;
-    this.contratoService.getContrato(id).subscribe({
+    this.contratoService.contratoId = id; // Atualiza o ID no serviço para validação
+    this.contratoService.getContratoPorId(id).subscribe({
       next: (contrato) => {
         if (contrato) {
           // Formata as datas para o input type="date"
@@ -99,6 +113,10 @@ export class ContratoFormComponent implements OnInit {
     return null;
   }
 
+  private validarNumeroContratoUnico(control: any): Promise<any> | Observable<any> {
+    return this.contratoService.verificarNumeroContratoUnico(control);
+  }
+
   onFileChange(event: Event, type: 'contrato' | 'portaria'): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -123,18 +141,28 @@ export class ContratoFormComponent implements OnInit {
     this.submitted = true;
     
     // Marca todos os campos como tocados para exibir erros de validação
+    this.contratoForm.markAllAsTouched();
+    
+    console.log('📋 Estado do formulário:', {
+      valid: this.contratoForm.valid,
+      invalid: this.contratoForm.invalid,
+      pending: this.contratoForm.pending,
+      errors: this.contratoForm.errors
+    });
+    
     if (this.contratoForm.invalid) {
       console.log('❌ Formulário inválido. Erros:', this.contratoForm.errors);
       console.log('📋 Estado dos campos:');
       
       Object.keys(this.contratoForm.controls).forEach(key => {
         const control = this.contratoForm.get(key);
-        control?.markAsTouched();
         console.log(`- ${key}:`, {
           valor: control?.value,
           valido: control?.valid,
           invalido: control?.invalid,
-          erros: control?.errors
+          pendente: control?.pending,
+          erros: control?.errors,
+          status: control?.status
         });
       });
       

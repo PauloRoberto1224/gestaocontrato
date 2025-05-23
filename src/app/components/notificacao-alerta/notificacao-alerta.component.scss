@@ -1,5 +1,9 @@
+@use 'sass:map';
+@use 'sass:color';
+
 // Variáveis de cores
 $primary: #0d6efd;
+$success: #198754;
 $danger: #dc3545;
 $warning: #ffc107;
 $info: #0dcaf0;
@@ -100,16 +104,16 @@ $zindex-alert: 1090;
 
 .notificacao-container {
   position: fixed;
-  top: map-get($spacers, 4);
-  right: map-get($spacers, 3);
+  top: map.get($spacers, 4);
+  right: map.get($spacers, 3);
   z-index: $zindex-fixed;
   display: flex;
   align-items: flex-start;
-  gap: map-get($spacers, 2);
+  gap: map.get($spacers, 2);
   
   @media (max-width: 576px) {
     top: auto;
-    bottom: map-get($spacers, 3);
+    bottom: map.get($spacers, 3);
     right: 50%;
     transform: translateX(50%);
     flex-direction: column-reverse;
@@ -167,7 +171,7 @@ $zindex-alert: 1090;
   @include focus-visible();
 
   &:hover, &:focus, &.active {
-    background-color: darken($gray-800, 5%);
+    background-color: color.adjust($gray-800, $lightness: -5%);
     transform: scale(1.05);
     outline: none;
   }
@@ -388,7 +392,7 @@ $zindex-alert: 1090;
           @include alert-variant(
             rgba($success, 0.1),
             rgba($success, 0.2),
-            darken($success, 10%)
+            color.adjust($success, $lightness: -10%)
           );
         }
         
@@ -396,7 +400,7 @@ $zindex-alert: 1090;
           @include alert-variant(
             rgba($danger, 0.1),
             rgba($danger, 0.2),
-            darken($danger, 10%)
+            color.adjust($danger, $lightness: -10%)
           );
         }
         
